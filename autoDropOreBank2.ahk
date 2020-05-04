@@ -173,9 +173,25 @@ b::
     isPause := true
     account := 1
     loop, 7{
-        bank()
-        randomSleepRange(1000,3000)
         switchAccount()
+        randomSleepRange(1000,2000)
+        bank()
+        randomSleepRange(1000,2000)
+    }
+    MsgBox, Banking done! Click OK when all Miners back
+    isPause := false
+return
+
+n::
+    global isPause
+    global account
+    isPause := true
+    account := 1
+    loop, 7{
+        switchAccount()
+        randomSleepRange(1000,2000)
+        bank2()
+        randomSleepRange(1000,2000)
     }
     MsgBox, Banking done! Click OK when all Miners back
     isPause := false
@@ -366,6 +382,137 @@ bank(){
     ; walk out of way
     
     MouseMove, 1087, 266, 2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+}
+
+bank2(){
+    global topX 
+    global topY 
+    global botX 
+    global botY 
+
+    randomSleepRange(500,1000)
+
+
+    ; ape scroll
+    MouseMove, 1206,82, 2
+    randomSleep()
+
+    ;right click to teleport
+    MouseClick, right
+    randomSleepRange(3000,4000)
+
+    ;Hold ctrl down
+    Send, {CTRL DOWN}
+    MouseMove, 1296, 151, 2
+    randomSleep()
+    ;left click
+    MouseClick, left
+    randomSleepRange(1000,2000)
+
+    ; ctrl up
+    Send, {CTRL UP}
+
+    ;pharm
+    MouseMove, 690, 69, 2
+    randomSleep()
+    ;left click
+    MouseClick, left
+    randomSleepRange(2000,3000)
+
+    ;;;;;;;;;;;;;;;
+    ; Check to see if pharm is opened
+    PixelSearch, , , 613-5, 283-5, 613+5, 283+5, 0x5A4929, 1, Fast
+    if ErrorLevel{ ; IF not found
+        MsgBox, Pharm not opened! Manual banking needed!
+        return
+    }
+
+    ; sell loop
+    loop{
+        Sleep, randomSleep()
+        PixelSearch, Px, Py, topX, topY, botX, botY, 0x4F88B8, 1, Fast ; GOLD
+        if ErrorLevel{ ; IF not found
+            PixelSearch, Px, Py, topX, topY, botX, botY, 0x555455, 0, Fast ; IRON
+            if ErrorLevel{ ; IF not found
+                PixelSearch, Px, Py, topX, topY, botX, botY, 0xB5D3E7, 0, Fast ; COPPER
+                if ErrorLevel{ ; IF not found
+                    PixelSearch, Px, Py, topX, topY, botX, botY, 0xB5B2B5, 0, Fast ; SILVER
+                    if ErrorLevel{ ; IF not found
+                        break
+                    }else{ ; if found
+                        MouseMove, Px, Py
+                        Sleep, randomSleep()
+                        MouseClick, Left
+                        MouseMove, 625, 284
+                        Sleep, randomSleep()
+                        MouseClick, Left
+                    }
+                }else{ ; if found
+                    MouseMove, Px, Py
+                    Sleep, randomSleep()
+                    MouseClick, Left
+                    MouseMove, 625, 284
+                    Sleep, randomSleep()
+                    MouseClick, Left
+                }
+            }else{ ; if found
+                MouseMove, Px, Py
+                Sleep, randomSleep()
+                MouseClick, Left
+                MouseMove, 625, 284
+                Sleep, randomSleep()
+                MouseClick, Left
+            }
+        }else{ ; if found
+            MouseMove, Px, Py
+            Sleep, randomSleep()
+            MouseClick, Left
+            MouseMove, 625, 284
+            Sleep, randomSleep()
+            MouseClick, Left
+        }
+        randomSleepRange(300,500)
+    }
+    randomSleepRange(1000,2000)
+
+    ; buy scroll
+    MouseMove, 442, 242, 2
+    randomSleep()
+    MouseClick, right
+    randomSleep()
+    
+    ; jump to bank
+    MouseMove, 1341, 566, 2
+    Send, {CTRL DOWN}
+    randomSleep()
+    ;left click
+    MouseClick, left
+    randomSleepRange(1000,2000)
+
+    ; ctrl up
+    Send, {CTRL UP}
+
+    ; close pharm
+    MouseMove, 629, 333, 2
+    randomSleep()
+
+    ; left
+    MouseClick, left
+    randomSleep()
+
+    ; open wh
+    MouseMove, 1103, 327, 2
+    randomSleep()
+    ;left
+    MouseClick, left
+    randomSleep()
+
+    ; walk out of way
+    
+    MouseMove, 1011, 136, 2
     randomSleep()
     MouseClick, left
     randomSleep()
