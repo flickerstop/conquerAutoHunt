@@ -1,6 +1,5 @@
 #Include drawBox.ahk
-
-
+#include .\lib\Vis2.ahk
 
 CoordMode, Mouse, Screen
 CoordMode, Pixel, Screen
@@ -62,7 +61,7 @@ Loop{
         continue
     }
 
-    if (attempts > 5){
+    if (attempts > 8){
         randomSleepRange(200,300)
         switchAccount()
         randomSleepRange(6000,9000)
@@ -123,6 +122,7 @@ Loop{
                 ;MsgBox, Silver Found x%Px% y%Py%
                 randomSleep()
                 MouseClick, Left
+                randomSleep()
                 MouseMove, dropX, dropY
                 randomSleep()
                 MouseClick, Left
@@ -133,6 +133,7 @@ Loop{
             ;MsgBox, Copper Found x%Px% y%Py%
             randomSleep()
             MouseClick, Left
+            randomSleep()
             MouseMove, dropX, dropY
             randomSleep()
             MouseClick, Left
@@ -143,6 +144,7 @@ Loop{
         ;MsgBox, Iron Found x%Px% y%Py%
         randomSleep()
         MouseClick, Left
+        randomSleep()
         MouseMove, dropX, dropY
         randomSleep()
         MouseClick, Left
@@ -150,7 +152,7 @@ Loop{
     }
     attempts++
 
-    randomSleep()
+    randomSleepRange(200,400)
 }
 
 return    ;-maybe missing return here
@@ -167,15 +169,20 @@ return
     Pause,Toggle
 return
 
+; Sell, bank then hop back
 b::
     global isPause
     global account
     isPause := true
     account := 1
-    loop, 7{
+    loop, 11{
         switchAccount()
         randomSleepRange(1000,2000)
         bank()
+        randomSleepRange(1000,2000)
+        wharehouse()
+        randomSleepRange(1000,2000)
+        toTheMine()
         randomSleepRange(1000,2000)
     }
     MsgBox, Banking done! Click OK when all Miners back
@@ -187,18 +194,104 @@ n::
     global account
     isPause := true
     account := 1
-    loop, 7{
+    loop, 11{
         switchAccount()
         randomSleepRange(1000,2000)
         bank2()
+        randomSleepRange(1000,2000)
+        wharehouse()
+        randomSleepRange(1000,2000)
+        toTheMine()
         randomSleepRange(1000,2000)
     }
     MsgBox, Banking done! Click OK when all Miners back
     isPause := false
 return
 
+
+; Just sell and sit at the bank
+g::
+    global isPause
+    global account
+    isPause := true
+    account := 1
+    loop, 11{
+        switchAccount()
+        randomSleepRange(1000,2000)
+        bank()
+        randomSleepRange(1000,2000)
+    }
+    MsgBox, All selling done. Click R when all inventorys open and ready to hop back
+return
+
+h::
+    global isPause
+    global account
+    isPause := true
+    account := 1
+    loop, 11{
+        switchAccount()
+        randomSleepRange(1000,2000)
+        bank2()
+        randomSleepRange(1000,2000)
+    }
+    MsgBox, All selling done. Click R when all inventorys open and ready to hop back
+return
+
+; Hop back to the mine
+r::
+    global isPause
+    global account
+    isPause := true
+    account := 1
+    loop, 11{
+        switchAccount()
+        randomSleepRange(1000,2000)
+         ; Teleport scroll
+        MouseMove, 1205, 83, 2
+        randomSleep()
+        MouseClick, right
+        randomSleepRange(2000,3000)
+
+        ; Blue marker thing
+        MouseMove, 976, 344, 2
+        randomSleep()
+        MouseClick, left
+        randomSleepRange(1000,1200)
+
+        ;Confirm buy
+        MouseMove, 683, 148, 2
+        randomSleep()
+        MouseClick, left
+        randomSleepRange(1000,2000)
+
+        ;close 
+        MouseClick, left
+        randomSleep()
+
+        ; Set DH
+        Send, {F10}
+        randomSleep()
+
+        MouseMove, 983, 764, 2
+        randomSleep()
+        MouseClick, left
+        randomSleepRange(1000,1200)
+        MouseClick, left
+        randomSleepRange(1000,2000)
+        toTheMine()
+        randomSleepRange(1000,2000)
+    }
+    MsgBox, Banking done! Click OK when all Miners back
+    isPause := false
+return
+
+t::
+    switchAccount()
+return
+
 randomSleep(){
-    Random, x, 50, 200
+    Random, x, 150, 300
     Sleep, x
 }
 
@@ -210,47 +303,16 @@ randomSleepRange(min,max){
 switchAccount(){
     global account
 
-    if (account = 1){
-        MouseMove, 573, 855, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleepRange(2000,3000)
-        account++
-    }else if (account = 2){
-        MouseMove, 737, 855, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleepRange(2000,3000)
-        account++
-    }else if (account = 3){
-        MouseMove, 892, 855, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleepRange(2000,3000)
-        account++
-    }else if (account = 4){
-        MouseMove, 1060, 855, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleepRange(2000,3000)
-        account++
-    }else if (account = 5){
-        MouseMove, 1213, 855, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleepRange(2000,3000)
-        account++
-    }else if (account = 6){
-        MouseMove, 1403, 855, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleepRange(2000,3000)
-        account++
-    }else if (account = 7){
-        MouseMove, 1517, 855, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleepRange(2000,3000)
+    accountX := [531,643,744,846,961,1068,1162,1269,1371,1471,1574]
+
+    
+    MouseMove, accountX[account], 855, 2
+    randomSleep()
+    MouseClick, Left
+    randomSleepRange(2000,3000)
+    account++
+
+    if (account = 12){
         account := 1
     }
     
@@ -301,7 +363,7 @@ bank(){
 
     ; sell loop
     loop{
-        Sleep, randomSleep()
+        randomSleep()
         PixelSearch, Px, Py, topX, topY, botX, botY, 0x4F88B8, 1, Fast ; GOLD
         if ErrorLevel{ ; IF not found
             PixelSearch, Px, Py, topX, topY, botX, botY, 0x555455, 0, Fast ; IRON
@@ -313,34 +375,34 @@ bank(){
                         break
                     }else{ ; if found
                         MouseMove, Px, Py
-                        Sleep, randomSleep()
+                        randomSleep()
                         MouseClick, Left
                         MouseMove, 625, 284
-                        Sleep, randomSleep()
+                        randomSleep()
                         MouseClick, Left
                     }
                 }else{ ; if found
                     MouseMove, Px, Py
-                    Sleep, randomSleep()
+                    randomSleep()
                     MouseClick, Left
                     MouseMove, 625, 284
-                    Sleep, randomSleep()
+                    randomSleep()
                     MouseClick, Left
                 }
             }else{ ; if found
                 MouseMove, Px, Py
-                Sleep, randomSleep()
+                randomSleep()
                 MouseClick, Left
                 MouseMove, 625, 284
-                Sleep, randomSleep()
+                randomSleep()
                 MouseClick, Left
             }
         }else{ ; if found
             MouseMove, Px, Py
-            Sleep, randomSleep()
+            randomSleep()
             MouseClick, Left
             MouseMove, 625, 284
-            Sleep, randomSleep()
+            randomSleep()
             MouseClick, Left
         }
         randomSleepRange(300,500)
@@ -432,7 +494,7 @@ bank2(){
 
     ; sell loop
     loop{
-        Sleep, randomSleep()
+        randomSleep()
         PixelSearch, Px, Py, topX, topY, botX, botY, 0x4F88B8, 1, Fast ; GOLD
         if ErrorLevel{ ; IF not found
             PixelSearch, Px, Py, topX, topY, botX, botY, 0x555455, 0, Fast ; IRON
@@ -444,34 +506,34 @@ bank2(){
                         break
                     }else{ ; if found
                         MouseMove, Px, Py
-                        Sleep, randomSleep()
+                        randomSleep()
                         MouseClick, Left
                         MouseMove, 625, 284
-                        Sleep, randomSleep()
+                        randomSleep()
                         MouseClick, Left
                     }
                 }else{ ; if found
                     MouseMove, Px, Py
-                    Sleep, randomSleep()
+                    randomSleep()
                     MouseClick, Left
                     MouseMove, 625, 284
-                    Sleep, randomSleep()
+                    randomSleep()
                     MouseClick, Left
                 }
             }else{ ; if found
                 MouseMove, Px, Py
-                Sleep, randomSleep()
+                randomSleep()
                 MouseClick, Left
                 MouseMove, 625, 284
-                Sleep, randomSleep()
+                randomSleep()
                 MouseClick, Left
             }
         }else{ ; if found
             MouseMove, Px, Py
-            Sleep, randomSleep()
+            randomSleep()
             MouseClick, Left
             MouseMove, 625, 284
-            Sleep, randomSleep()
+            randomSleep()
             MouseClick, Left
         }
         randomSleepRange(300,500)
@@ -516,4 +578,256 @@ bank2(){
     randomSleep()
     MouseClick, left
     randomSleep()
+
 }
+
+getInventoryGold(){
+    return StrReplace(OCR([1271, 418, 82, 20]),",","")
+}
+; FF7FEC VIOLET GEM
+; EF511B MOON GEM
+
+wharehouse(){
+    global topX 
+    global topY 
+    global botX 
+    global botY 
+
+    ;Select text area
+    MouseMove, 543, 194, 2
+    randomSleep()
+    MouseClick, left
+
+    ; Write in amount of gold
+    Send % getInventoryGold()
+    randomSleep()
+
+    ;Deposit
+    MouseMove, 569, 161, 2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+
+    ;Select text area
+    MouseMove, 550, 197, 2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+
+    ; Take out 5000
+    Send, {BackSpace}{BackSpace}{BackSpace}{BackSpace}{BackSpace}{BackSpace}
+    Send, 5000
+    randomSleep()
+
+    ;Withdraw
+    MouseMove, 480, 163, 2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+
+    ; Bank Gem Loop
+    loop{
+        randomSleep()
+        PixelSearch, Px, Py, topX, topY, botX, botY, 0xFF7FEC, 1, Fast ; VIOLET GEM
+        if ErrorLevel{ ; IF not found
+            PixelSearch, Px, Py, topX, topY, botX, botY, 0xEF511B, 0, Fast ; MOON GEM
+            if ErrorLevel{ ; IF not found
+                randomSleepRange(2000,3000)
+                break
+            }else{ ; if found
+                MouseMove, Px, Py
+                randomSleep()
+                MouseClick, Left
+                MouseMove, 607,419
+                randomSleep()
+                MouseClick, Left
+            }
+        }else{ ; if found
+            MouseMove, Px, Py
+            randomSleep()
+            MouseClick, Left
+            MouseMove, 607,419
+            randomSleep()
+            MouseClick, Left
+        }
+        randomSleepRange(300,500)
+    }
+
+    ; Teleport scroll
+    MouseMove, 1205, 83, 2
+    randomSleep()
+    MouseClick, right
+    randomSleepRange(3000,4000)
+
+    ; Blue marker thing
+    MouseMove, 976, 344, 2
+    randomSleep()
+    MouseClick, left
+    randomSleepRange(1500,2200)
+
+    ;Confirm buy
+    MouseMove, 683, 148, 2
+    randomSleep()
+    MouseClick, left
+    randomSleepRange(1500,2000)
+
+    ;close 
+    MouseClick, left
+    randomSleep()
+
+    ; Set DH
+    Send, {F10}
+    randomSleep()
+
+    MouseMove, 983, 764, 2
+    randomSleep()
+    MouseClick, left
+    randomSleepRange(1000,1200)
+    MouseClick, left
+    randomSleepRange(1000,1200)
+}
+
+toTheMine(){
+    randomSleep()
+    MouseMove, 1330, 262, 2
+    randomSleep()
+    MouseClick, right
+    randomSleep()
+
+    Send, {CTRL DOWN}
+    loop{
+        PixelSearch, Px, Py, 405, 39, 1417, 709, 0x2252AE, 0, Fast ; Search for mine guy
+        if ErrorLevel{ ; IF not found
+            ; Hop Again
+            Random, x, 1250, 1350
+            Random, y, 250, 350
+
+            MouseMove, x, y, 2
+            randomSleep()
+            MouseClick, left
+            randomSleepRange(100,300)
+
+        }else{
+            Send, {CTRL UP}
+            ; Left click mine guy
+            randomSleepRange(300,500)
+            MouseMove, Px, Py, 2
+            randomSleep()
+            MouseClick, left
+            randomSleep()
+
+            PixelSearch, , , 651,63, 716,127, 0x526D7B, 0, Fast ; Search for mine guy ICON
+            if ErrorLevel{ ; IF not found
+
+            }else{
+                
+
+                ; ; Search again
+                ; PixelSearch, Px, Py, 405, 39, 1417, 709, 0x2252AE, 0, Fast ; Search for mine guy
+                ; if ErrorLevel{
+                ;     continue
+                ; }
+
+
+                ; enter mine
+                MouseMove, 726,147, 2
+                randomSleep()
+                MouseClick, left
+
+                break
+            }
+        }
+    }
+
+    randomSleepRange(2000,3000)
+
+    Send, {CTRL DOWN}
+    MouseMove, 884, 684, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 746, 646, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 909, 670, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 1055, 683, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 1055, 683, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 1055, 683, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 1078, 649, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 951, 358, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 1093, 455, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 1228, 672, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 1228, 672, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 1228, 672, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 1228, 672, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 1228, 672, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 627, 652, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 627, 652, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 627, 652, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 627, 652, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 627, 652, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 918, 659, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 843, 550, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 627, 502, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 502, 566, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 479, 480, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 481, 404, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 494, 478, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    MouseMove, 509, 586, 1
+    MouseClick, Left
+    randomSleepRange(500,600)
+    Send, {CTRL UP}
+}
+
+;070B0F Mine DUDE
+;405, 39 CLIENT TOP LEFT
+;1417, 709 CLIENT BOTTOM RIGHT
+
+;1330, 262 CLick Area
