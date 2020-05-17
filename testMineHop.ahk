@@ -3,6 +3,10 @@ CoordMode, Pixel, Screen
 
 randomSleepRange(3000,3000)
 
+s::
+    toTheMine()
+    return
+
 toTheMine(){
     randomSleep()
     MouseMove, 1330, 262, 2

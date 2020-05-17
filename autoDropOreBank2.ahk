@@ -61,10 +61,10 @@ Loop{
         continue
     }
 
-    if (attempts > 8){
+    if (attempts > 9){
         randomSleepRange(200,300)
         switchAccount()
-        randomSleepRange(6000,9000)
+        randomSleep()
         attempts := 0
     }
     ; Check for logged out
@@ -113,9 +113,9 @@ Loop{
                 MouseMove, dropX, dropY
                 randomSleep()
                 MouseClick, Right
-                randomSleepRange(2000,3000)
+                randomSleep()
                 switchAccount()
-                randomSleepRange(2000,3000)
+                randomSleep()
                 attempts := 0
             }else{ ; if found
                 MouseMove, Px, Py
@@ -125,6 +125,10 @@ Loop{
                 randomSleep()
                 MouseMove, dropX, dropY
                 randomSleep()
+                if (checkHoldingOre(0xB5B2B5) = false){
+                    attempts++
+                    continue
+                }
                 MouseClick, Left
                 randomSleep()
             }
@@ -136,6 +140,10 @@ Loop{
             randomSleep()
             MouseMove, dropX, dropY
             randomSleep()
+            if (checkHoldingOre(0xB5D3E7) = false){
+                attempts++
+                continue
+            }
             MouseClick, Left
             randomSleep()
         }
@@ -147,6 +155,10 @@ Loop{
         randomSleep()
         MouseMove, dropX, dropY
         randomSleep()
+        if (checkHoldingOre(0x555455) = false){
+            attempts++
+            continue
+        }
         MouseClick, Left
         randomSleep()
     }
@@ -171,6 +183,7 @@ return
 
 ; Sell, bank then hop back
 b::
+    randomSleepRange(5000,6000)
     global isPause
     global account
     isPause := true
@@ -185,11 +198,11 @@ b::
         toTheMine()
         randomSleepRange(1000,2000)
     }
-    MsgBox, Banking done! Click OK when all Miners back
     isPause := false
 return
 
 n::
+    randomSleepRange(5000,6000)
     global isPause
     global account
     isPause := true
@@ -204,13 +217,13 @@ n::
         toTheMine()
         randomSleepRange(1000,2000)
     }
-    MsgBox, Banking done! Click OK when all Miners back
     isPause := false
 return
 
 
 ; Just sell and sit at the bank
 g::
+    randomSleepRange(5000,6000)
     global isPause
     global account
     isPause := true
@@ -221,10 +234,11 @@ g::
         bank()
         randomSleepRange(1000,2000)
     }
-    MsgBox, All selling done. Click R when all inventorys open and ready to hop back
+    MsgBox, All selling done. Click M when all inventorys open and ready to hop back
 return
 
 h::
+    randomSleepRange(5000,6000)
     global isPause
     global account
     isPause := true
@@ -235,11 +249,11 @@ h::
         bank2()
         randomSleepRange(1000,2000)
     }
-    MsgBox, All selling done. Click R when all inventorys open and ready to hop back
+    MsgBox, All selling done. Click M when all inventorys open and ready to hop back
 return
 
 ; Hop back to the mine
-r::
+m::
     global isPause
     global account
     isPause := true
@@ -287,11 +301,15 @@ r::
 return
 
 t::
-    switchAccount()
+    ;prepareMiners()
+return
+
+i::
+    ;scatterMiners()
 return
 
 randomSleep(){
-    Random, x, 150, 300
+    Random, x, 300, 500
     Sleep, x
 }
 
@@ -303,13 +321,13 @@ randomSleepRange(min,max){
 switchAccount(){
     global account
 
-    accountX := [531,643,744,846,961,1068,1162,1269,1371,1471,1574]
+    accountX := [538,641,752,861,960,1065,1166,1274,1373,1479,1588]
 
     
     MouseMove, accountX[account], 855, 2
     randomSleep()
     MouseClick, Left
-    randomSleepRange(2000,3000)
+    randomSleep()
     account++
 
     if (account = 12){
@@ -616,7 +634,7 @@ wharehouse(){
 
     ; Take out 5000
     Send, {BackSpace}{BackSpace}{BackSpace}{BackSpace}{BackSpace}{BackSpace}
-    Send, 5000
+    Send, 12000
     randomSleep()
 
     ;Withdraw
@@ -653,11 +671,23 @@ wharehouse(){
         randomSleepRange(300,500)
     }
 
+    teleportAttempts := 0
+    teleportToDesert:
+
     ; Teleport scroll
     MouseMove, 1205, 83, 2
     randomSleep()
     MouseClick, right
     randomSleepRange(3000,4000)
+
+    PixelSearch, , , 484, 201, 486, 203, 0x52717B, 0, Fast
+    if ErrorLevel{ ; IF not found
+        if (teleportAttempts = 3){
+            MsgBox, Unable to teleport to desert!
+        }
+        teleportAttempts++
+        Goto, teleportToDesert
+    }
 
     ; Blue marker thing
     MouseMove, 976, 344, 2
@@ -698,14 +728,18 @@ toTheMine(){
     loop{
         PixelSearch, Px, Py, 405, 39, 1417, 709, 0x2252AE, 0, Fast ; Search for mine guy
         if ErrorLevel{ ; IF not found
+            Send, {CTRL DOWN}
             ; Hop Again
             Random, x, 1250, 1350
             Random, y, 250, 350
 
             MouseMove, x, y, 2
-            randomSleep()
+            randomSleepRange(50,100)
             MouseClick, left
-            randomSleepRange(100,300)
+            randomSleepRange(50,100)
+
+            ;TODO Check to see if the character is in the top right of the map
+            ; do something like if x<### && y< ### then click on the fixed spot
 
         }else{
             Send, {CTRL UP}
@@ -734,96 +768,489 @@ toTheMine(){
                 randomSleep()
                 MouseClick, left
 
+                randomSleepRange(800,1000)
+                
+                PixelSearch, , , 980, 235, 982, 237, 0x425563, 0, Fast
+                if ErrorLevel{ ; IF not found
+                    continue
+                }
+
                 break
             }
         }
     }
 
-    randomSleepRange(2000,3000)
+    MouseMove, 1382, 664, 2
+    ; Scan for the "end DH" thing
+    Loop{
+        PixelSearch, , , 1372,654, 1392,674, 0x4D3921, 0, Fast
+        if ErrorLevel{ ; IF not found
+            randomSleepRange(500,1000)
+        }else{
+            break
+        }
+
+        ;and stam is full
+        PixelSearch, , , 447,720, 451,724, 0x927E02, 0, Fast
+        if ErrorLevel{ ; IF not found
+            Send, {F1}
+        }else{
+            Goto, startRun
+        }
+    }
+
+    ; Stop DH
+    MouseMove, 1382, 664, 2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+
+    ; Sit
+    Send, {F1}
+    randomSleepRange(12000,13000) ;Wait for stam
+
+    startRun:
+
+    MouseMove, 884, 684, 1
+    randomSleep()
+    MouseClick, right
+    randomSleep()
 
     Send, {CTRL DOWN}
-    MouseMove, 884, 684, 1
+    ;first level
+    jumpNum := 1
+    Loop{
+
+        ; Check to make sure we didn't go down a ladder by accient
+        PixelSearch, , , 842, 463, 844, 465, 0x5D6276, 0, Fast
+        if ErrorLevel{ ; IF not found
+        }else{
+            randomSleepRange(1000,1300)
+            break
+        }
+
+        ; look for ladder
+        PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+        if ErrorLevel{ ; IF not found
+
+        }else{
+            randomSleepRange(1000,1300)
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{
+                continue
+            }
+            Send, {Ctrl Up}
+            MouseMove, Px, Py, 2
+            randomSleep()
+            MouseClick, Left
+            Send, {CTRL DOWN}
+
+            randomSleepRange(3000,4000)
+            ;check to make sure we went through
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{
+                continue
+            }else{
+                MouseMove, 520, 146, 2
+                randomSleep()
+                MouseClick, Left
+                randomSleep()
+                MouseClick, Left
+                randomSleep()
+            }
+            break
+        }
+
+        ; 2 jumps right
+        if (jumpNum = 1 || jumpNum = 2){
+            Random, x, 1109-30, 1109+30
+            Random, y, 651-30, 651+30
+
+            MouseMove, x, y, 2
+            randomSleepRange(50,100)
+            MouseClick, Left
+            jumpNum++
+        }else{ ; 1 jump left
+            Random, x, 771-30, 771+30
+            Random, y, 643-30, 643+30
+
+            MouseMove, x, y, 2
+            randomSleepRange(50,100)
+            MouseClick, Left
+            jumpNum := 1
+        }
+        
+        randomSleepRange(200,300)
+    }
+    randomSleepRange(500,700)
+
+    ; Hop to allow the crystal check
+    MouseMove, 1024, 579, 2
+    randomSleepRange(50,100)
     MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 746, 646, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 909, 670, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 1055, 683, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 1055, 683, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 1055, 683, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 1078, 649, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 951, 358, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 1093, 455, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 1228, 672, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 1228, 672, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 1228, 672, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 1228, 672, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 1228, 672, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 627, 652, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 627, 652, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 627, 652, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 627, 652, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 627, 652, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 918, 659, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 843, 550, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 627, 502, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 502, 566, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 479, 480, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 481, 404, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 494, 478, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
-    MouseMove, 509, 586, 1
-    MouseClick, Left
-    randomSleepRange(500,600)
+    randomSleepRange(500,700)
+
+    ;2nd level
+    Loop{
+
+        ; Check to make sure we didn't go down a ladder by accient
+        PixelSearch, , , 842, 463, 844, 465, 0x5D6276, 0, Fast
+        if ErrorLevel{ ; IF not found
+        }else{
+            randomSleepRange(1000,1300)
+            break
+        }
+
+        ; look for ladder
+        PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+        if ErrorLevel{ ; IF not found
+
+        }else{
+            randomSleepRange(1000,1300)
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{
+                continue
+            }
+            Send, {Ctrl Up}
+            MouseMove, Px, Py, 2
+            randomSleep()
+            MouseClick, Left
+            Send, {CTRL DOWN}
+
+            randomSleepRange(3000,4000)
+            break
+        }
+        if (jumpNum = 1){
+            Random, x, 1245-30, 1245+30
+            Random, y, 435-30, 435+30
+
+            ; Check if jump is useless due to wall
+            PixelSearch, , , x-1, y-1, x+1, y+1, 0x000000, 1, Fast
+            if ErrorLevel{
+                
+            }else{
+                jumpNum++
+                continue
+            }
+
+            MouseMove, x, y, 2
+            randomSleepRange(50,100)
+            MouseClick, Left
+            jumpNum++
+        }else if (jumpNum = 2){
+            Random, x, 1202-30, 1202+30
+            Random, y, 634-30, 634+30
+
+            MouseMove, x, y, 2
+            randomSleepRange(50,100)
+            MouseClick, Left
+            jumpNum++
+        }else{ ; 1 jump left
+            Random, x, 948-30, 948+30
+            Random, y, 672-30, 672+30
+
+            MouseMove, x, y, 2
+            randomSleepRange(50,100)
+            MouseClick, Left
+            jumpNum := 1
+        }
+
+        randomSleepRange(300,400)
+    }
+
+    ; Hop to allow the crystal check
+    Random, amountOfJumps, 3, 10
+    Loop % amountOfJumps{
+        MouseMove, 1024, 579, 2
+        randomSleepRange(50,100)
+        MouseClick, Left
+        randomSleepRange(500,700)
+    }
+
+    ; 3rd level
+    Random, amountOfJumps, 1, 10
+    Loop % amountOfJumps{
+
+        ; look for ladder
+        PixelSearch, Px, Py, 647, 223, 1312, 578, 0x587D91, 0, Fast
+        if ErrorLevel{ ; IF not found
+
+        }else{
+            randomSleepRange(1000,1300)
+            PixelSearch, Px, Py, 647, 223, 1153, 578, 0x587D91, 0, Fast
+            if ErrorLevel{
+                continue
+            }
+            MouseMove, Px, Py, 2
+            randomSleep()
+            MouseClick, Left
+
+            randomSleepRange(1000,2000)
+            break
+        }
+
+        ; 2 jumps up
+        if (jumpNum = 1 || jumpNum = 2){
+            Random, x, 1203-30, 1203+30
+            Random, y, 296-30, 296+30
+
+            MouseMove, x, y, 2
+            randomSleepRange(50,100)
+            MouseClick, Left
+            jumpNum++
+        }else{ ; 1 jump right
+            Random, x, 1215-30, 1215+30
+            Random, y, 620-30, 620+30
+
+            MouseMove, x, y, 2
+            randomSleepRange(50,100)
+            MouseClick, Left
+            jumpNum := 1
+        }
+        
+        randomSleepRange(200,300)
+    }
+
+    global dropX
+    global dropY
     Send, {CTRL UP}
+
+    scatterMiner()
+    prepareMiner()
+
+    randomSleep()
+    MouseMove, dropX, dropY
+    randomSleep()
+    MouseClick, Right
+    randomSleep()
+}
+
+; scatterMiners(){
+;     randomSleepRange(2000,3000)
+;     global isPause
+;     global account
+;     isPause := true
+;     account := 1
+    
+;     loop, 11{
+;         switchAccount()
+;         randomSleepRange(1000,2000)
+;         ; do DH
+
+;         MouseMove, 648,558,2
+;         randomSleep()
+;         MouseClick, right
+;         randomSleep()
+
+;         ; jump to the center
+        
+
+;         Random, amountOfJumps, 1, 7
+;         Send, {Ctrl down}
+;         loop % amountOfJumps{
+;             Random, x, 648-50, 648+50
+;             Random, y, 558-50, 558+50
+            
+;             MouseMove, x,y,2
+;             randomSleep()
+;             MouseClick, left
+;             randomSleepRange(300,500)
+;         }
+;         Send, {Ctrl Up}
+;         Random, jumpDir,1,4
+
+;         if (jumpDir = 1){
+;             Send, {Ctrl down}
+;             loop % amountOfJumps{
+;                 Random, x, 423, 920
+;                 Random, y, 90, 406
+                
+;                 MouseMove, x,y,2
+;                 randomSleep()
+;                 MouseClick, left
+;                 randomSleepRange(300,500)
+;             }
+;             Send, {Ctrl Up}
+;         }else if (jumpDir = 2){
+;             Send, {Ctrl down}
+;             loop % amountOfJumps{
+;                 Random, x, 920, 1417
+;                 Random, y, 90, 406
+                
+;                 MouseMove, x,y,2
+;                 randomSleep()
+;                 MouseClick, left
+;                 randomSleepRange(300,500)
+;             }
+;             Send, {Ctrl Up}
+;         }else if (jumpDir = 3){
+;             Send, {Ctrl down}
+;             loop % amountOfJumps{
+;                 Random, x, 423, 920
+;                 Random, y, 406, 720
+                
+;                 MouseMove, x,y,2
+;                 randomSleep()
+;                 MouseClick, left
+;                 randomSleepRange(300,500)
+;             }
+;             Send, {Ctrl Up}
+;         }else{
+;             Send, {Ctrl down}
+;             loop % amountOfJumps{
+;                 Random, x, 20, 1417
+;                 Random, y, 406, 720
+                
+;                 MouseMove, x,y,2
+;                 randomSleep()
+;                 MouseClick, left
+;                 randomSleepRange(300,500)
+;             }
+;             Send, {Ctrl Up}
+;         }
+
+        
+;     }
+    
+; }
+
+scatterMiner(){
+    randomSleepRange(2000,3000)
+
+    MouseMove, 648,558,2
+    randomSleep()
+    MouseClick, right
+    randomSleep()
+
+    ; jump to the center
+    
+
+    Random, amountOfJumps, 1, 7
+    Send, {Ctrl down}
+    loop % amountOfJumps{
+        Random, x, 648-50, 648+50
+        Random, y, 558-50, 558+50
+        
+        MouseMove, x,y,2
+        randomSleep()
+        MouseClick, left
+        randomSleepRange(300,500)
+    }
+    Send, {Ctrl Up}
+    Random, jumpDir,1,4
+
+    if (jumpDir = 1){
+        Send, {Ctrl down}
+        loop % amountOfJumps{
+            Random, x, 423, 920
+            Random, y, 90, 406
+            
+            MouseMove, x,y,2
+            randomSleep()
+            MouseClick, left
+            randomSleepRange(300,500)
+        }
+        Send, {Ctrl Up}
+    }else if (jumpDir = 2){
+        Send, {Ctrl down}
+        loop % amountOfJumps{
+            Random, x, 920, 1417
+            Random, y, 90, 406
+            
+            MouseMove, x,y,2
+            randomSleep()
+            MouseClick, left
+            randomSleepRange(300,500)
+        }
+        Send, {Ctrl Up}
+    }else if (jumpDir = 3){
+        Send, {Ctrl down}
+        loop % amountOfJumps{
+            Random, x, 423, 920
+            Random, y, 406, 720
+            
+            MouseMove, x,y,2
+            randomSleep()
+            MouseClick, left
+            randomSleepRange(300,500)
+        }
+        Send, {Ctrl Up}
+    }else{
+        Send, {Ctrl down}
+        loop % amountOfJumps{
+            Random, x, 20, 1417
+            Random, y, 406, 720
+            
+            MouseMove, x,y,2
+            randomSleep()
+            MouseClick, left
+            randomSleepRange(300,500)
+        }
+        Send, {Ctrl Up}
+    }
+}
+
+; prepareMiners(){
+;     randomSleepRange(2000,3000)
+;     global isPause
+;     global account
+;     isPause := true
+;     account := 1
+    
+;     loop, 11{
+;         switchAccount()
+;         randomSleepRange(1000,2000)
+
+;         ; Grab DH
+;         MouseMove, 1174,785, 2
+;         randomSleep()
+;         click, down
+;         randomSleep()
+;         MouseMove, 1162,665, 2
+;         randomSleep()
+;         ; drop DH
+;         click, up
+;         randomSleep()
+
+;         ; open inventory
+;         MouseMove, 983, 764, 2
+;         randomSleep()
+;         MouseClick, left
+;         randomSleepRange(1000,1200)
+;     }
+; }
+
+prepareMiner(){
+    ; Grab DH
+    MouseMove, 1174,785, 2
+    randomSleep()
+    click, down
+    randomSleep()
+    MouseMove, 1162,665, 2
+    randomSleep()
+    ; drop DH
+    click, up
+    randomSleep()
+
+    ; open inventory
+    MouseMove, 983, 764, 2
+    randomSleep()
+    MouseClick, left
+    randomSleepRange(1000,1200)
+}
+
+
+
+; Make sure the mouse is holding the current ore
+checkHoldingOre(oreColour){
+    MouseGetPos, x, y 
+
+    PixelSearch, , , x-10, y-10, x+10, y+10, oreColour, 0, Fast
+    if ErrorLevel{ ; IF not found
+        return false
+    }else{
+        return true
+    }
 }
 
 ;070B0F Mine DUDE
