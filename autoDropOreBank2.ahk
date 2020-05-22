@@ -56,6 +56,7 @@ account := 1
 isPause := false
 
 Loop{
+    
     if (isPause = true){
         randomSleepRange(1000,2000)
         continue
@@ -72,6 +73,12 @@ Loop{
     if ErrorLevel{ ; IF not found
 
     }else{
+        randomSleepRange(1000,2000)
+        ;check to see if still there (not someone jumping by)
+        PixelSearch, Px, Py, shadowX-10, shadowY-10, shadowX+10, shadowY+10, 0xFFFFFF, 0, Fast
+        if ErrorLevel{ ; IF not found
+            continue
+        }
         ; Click OK on disconnect
         randomSleep()
         MouseMove, 1091, 473, 2
@@ -201,25 +208,6 @@ b::
     isPause := false
 return
 
-n::
-    randomSleepRange(5000,6000)
-    global isPause
-    global account
-    isPause := true
-    account := 1
-    loop, 11{
-        switchAccount()
-        randomSleepRange(1000,2000)
-        bank2()
-        randomSleepRange(1000,2000)
-        wharehouse()
-        randomSleepRange(1000,2000)
-        toTheMine()
-        randomSleepRange(1000,2000)
-    }
-    isPause := false
-return
-
 
 ; Just sell and sit at the bank
 g::
@@ -237,20 +225,6 @@ g::
     MsgBox, All selling done. Click M when all inventorys open and ready to hop back
 return
 
-h::
-    randomSleepRange(5000,6000)
-    global isPause
-    global account
-    isPause := true
-    account := 1
-    loop, 11{
-        switchAccount()
-        randomSleepRange(1000,2000)
-        bank2()
-        randomSleepRange(1000,2000)
-    }
-    MsgBox, All selling done. Click M when all inventorys open and ready to hop back
-return
 
 ; Hop back to the mine
 m::
@@ -301,11 +275,14 @@ m::
 return
 
 t::
-    ;prepareMiners()
+    tradeOverGoldAndGems()
 return
 
 i::
-    ;scatterMiners()
+    coords := getXY()
+    x := coords[1]
+    y := coords[2]
+    MsgBox % x . "," . y
 return
 
 randomSleep(){
@@ -353,23 +330,18 @@ bank(){
     MouseClick, right
     randomSleepRange(3000,4000)
 
-    ;Hold ctrl down
-    Send, {CTRL DOWN}
-    MouseMove, 1203, 153, 2
+
+    ; Walk to pharm
+    MouseMove, 967, 88, 2
     randomSleep()
-    ;left click
+    MouseClick, left
+    randomSleepRange(6000,7000)
+
+    ; Open pharm
+    MouseMove, 981, 74, 2
+    randomSleep()
     MouseClick, left
     randomSleepRange(1000,2000)
-
-    ; ctrl up
-    Send, {CTRL UP}
-
-    ;pharm
-    MouseMove, 783, 90, 2
-    randomSleep()
-    ;left click
-    MouseClick, left
-    randomSleepRange(2000,3000)
 
     ;;;;;;;;;;;;;;;
     ; Check to see if pharm is opened
@@ -425,6 +397,7 @@ bank(){
         }
         randomSleepRange(300,500)
     }
+
     randomSleepRange(1000,2000)
 
     ; buy scroll
@@ -432,171 +405,24 @@ bank(){
     randomSleep()
     MouseClick, right
     randomSleep()
-    
-    ; jump to bank
-    MouseMove, 1355, 554, 2
-    Send, {CTRL DOWN}
-    randomSleep()
-    ;left click
-    MouseClick, left
-    randomSleepRange(1000,2000)
 
-    ; ctrl up
-    Send, {CTRL UP}
-
-    ; close pharm
-    MouseMove, 629, 333, 2
-    randomSleep()
-
-    ; left
-    MouseClick, left
-    randomSleep()
-
-    ; open wh
-    MouseMove, 1165, 365, 2
-    randomSleep()
-    ;left
-    MouseClick, left
-    randomSleep()
-
-    ; walk out of way
-    
-    MouseMove, 1087, 266, 2
+    ; Close inventory/Store
+    MouseMove, 634, 331, 2
     randomSleep()
     MouseClick, left
-    randomSleep()
-}
+    randomSleepRange(1000,1200)
 
-bank2(){
-    global topX 
-    global topY 
-    global botX 
-    global botY 
-
-    randomSleepRange(500,1000)
-
-
-    ; ape scroll
-    MouseMove, 1206,82, 2
-    randomSleep()
-
-    ;right click to teleport
-    MouseClick, right
-    randomSleepRange(3000,4000)
-
-    ;Hold ctrl down
-    Send, {CTRL DOWN}
-    MouseMove, 1296, 151, 2
-    randomSleep()
-    ;left click
-    MouseClick, left
-    randomSleepRange(1000,2000)
-
-    ; ctrl up
-    Send, {CTRL UP}
-
-    ;pharm
-    MouseMove, 690, 69, 2
-    randomSleep()
-    ;left click
-    MouseClick, left
-    randomSleepRange(2000,3000)
-
-    ;;;;;;;;;;;;;;;
-    ; Check to see if pharm is opened
-    PixelSearch, , , 613-5, 283-5, 613+5, 283+5, 0x5A4929, 1, Fast
-    if ErrorLevel{ ; IF not found
-        MsgBox, Pharm not opened! Manual banking needed!
-        return
-    }
-
-    ; sell loop
-    loop{
-        randomSleep()
-        PixelSearch, Px, Py, topX, topY, botX, botY, 0x4F88B8, 1, Fast ; GOLD
-        if ErrorLevel{ ; IF not found
-            PixelSearch, Px, Py, topX, topY, botX, botY, 0x555455, 0, Fast ; IRON
-            if ErrorLevel{ ; IF not found
-                PixelSearch, Px, Py, topX, topY, botX, botY, 0xB5D3E7, 0, Fast ; COPPER
-                if ErrorLevel{ ; IF not found
-                    PixelSearch, Px, Py, topX, topY, botX, botY, 0xB5B2B5, 0, Fast ; SILVER
-                    if ErrorLevel{ ; IF not found
-                        break
-                    }else{ ; if found
-                        MouseMove, Px, Py
-                        randomSleep()
-                        MouseClick, Left
-                        MouseMove, 625, 284
-                        randomSleep()
-                        MouseClick, Left
-                    }
-                }else{ ; if found
-                    MouseMove, Px, Py
-                    randomSleep()
-                    MouseClick, Left
-                    MouseMove, 625, 284
-                    randomSleep()
-                    MouseClick, Left
-                }
-            }else{ ; if found
-                MouseMove, Px, Py
-                randomSleep()
-                MouseClick, Left
-                MouseMove, 625, 284
-                randomSleep()
-                MouseClick, Left
-            }
-        }else{ ; if found
-            MouseMove, Px, Py
-            randomSleep()
-            MouseClick, Left
-            MouseMove, 625, 284
-            randomSleep()
-            MouseClick, Left
-        }
-        randomSleepRange(300,500)
-    }
-    randomSleepRange(1000,2000)
-
-    ; buy scroll
-    MouseMove, 442, 242, 2
-    randomSleep()
-    MouseClick, right
-    randomSleep()
-    
-    ; jump to bank
-    MouseMove, 1341, 566, 2
-    Send, {CTRL DOWN}
-    randomSleep()
-    ;left click
-    MouseClick, left
-    randomSleepRange(1000,2000)
-
-    ; ctrl up
-    Send, {CTRL UP}
-
-    ; close pharm
-    MouseMove, 629, 333, 2
-    randomSleep()
-
-    ; left
-    MouseClick, left
-    randomSleep()
-
-    ; open wh
-    MouseMove, 1103, 327, 2
-    randomSleep()
-    ;left
-    MouseClick, left
-    randomSleep()
-
-    ; walk out of way
-    
-    MouseMove, 1011, 136, 2
+    ; Walk to WH
+    MouseMove, 1392, 296, 2
     randomSleep()
     MouseClick, left
-    randomSleep()
+    randomSleepRange(6000,7000)
 
+    ; Open WH
+    MouseMove, 1308, 585, 2
+    randomSleep()
+    MouseClick, left
+    randomSleepRange(1000,1200)
 }
 
 getInventoryGold(){
@@ -718,6 +544,10 @@ wharehouse(){
 }
 
 toTheMine(){
+
+    ;; TODO
+    ; Add if it takes more than 3 minutes, just start mining
+
     randomSleep()
     MouseMove, 1330, 262, 2
     randomSleep()
@@ -725,60 +555,78 @@ toTheMine(){
     randomSleep()
 
     Send, {CTRL DOWN}
+
+    clickAttempts := 0
+    ; Hop to mine dude
     loop{
-        PixelSearch, Px, Py, 405, 39, 1417, 709, 0x2252AE, 0, Fast ; Search for mine guy
-        if ErrorLevel{ ; IF not found
-            Send, {CTRL DOWN}
-            ; Hop Again
-            Random, x, 1250, 1350
-            Random, y, 250, 350
+        ; Check coords are close to the miner
+        ;coords := getXY()
+        ;Console.log(coords)
+        if (false) { ;(coords[2] < 14 and coords[2] > 0){
+            OutputDebug % coords[2]
+            Random, x, 1176, 1212
+            Random, y, 139, 237
 
             MouseMove, x, y, 2
             randomSleepRange(50,100)
             MouseClick, left
-            randomSleepRange(50,100)
-
-            ;TODO Check to see if the character is in the top right of the map
-            ; do something like if x<### && y< ### then click on the fixed spot
+            clickAttempts++
 
         }else{
-            Send, {CTRL UP}
-            ; Left click mine guy
-            randomSleepRange(300,500)
-            MouseMove, Px, Py, 2
-            randomSleep()
-            MouseClick, left
-            randomSleep()
-
-            PixelSearch, , , 651,63, 716,127, 0x526D7B, 0, Fast ; Search for mine guy ICON
+            ; Hop towards the mine entrance
+            PixelSearch, Px, Py, 1153, 37, 1422, 248, 0x392010, 0, Fast ; Search for mine guy
             if ErrorLevel{ ; IF not found
+                Send, {CTRL DOWN}
+                ; Hop Again
+                Random, x, 1250, 1350
+                Random, y, 250, 350
 
-            }else{
-                
-
-                ; ; Search again
-                ; PixelSearch, Px, Py, 405, 39, 1417, 709, 0x2252AE, 0, Fast ; Search for mine guy
-                ; if ErrorLevel{
-                ;     continue
-                ; }
-
-
-                ; enter mine
-                MouseMove, 726,147, 2
-                randomSleep()
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
                 MouseClick, left
-
-                randomSleepRange(800,1000)
-                
-                PixelSearch, , , 980, 235, 982, 237, 0x425563, 0, Fast
-                if ErrorLevel{ ; IF not found
-                    continue
-                }
-
-                break
+                randomSleepRange(50,100)
+            }else{
+                MouseMove, Px, Py-30, 2
+                randomSleepRange(50,100)
+                MouseClick, left
+                randomSleepRange(50,100)
+                clickAttempts++
             }
         }
+
+        ;if unable to open the miner box
+        if (clickAttempts > 6){
+            loop,4{
+                MouseMove, 515,343, 2
+                randomSleepRange(300,500)
+                MouseClick, left
+            }
+            clickAttempts := 0
+        }
+
+        
+        randomSleepRange(300,500)
+        ; Check to see if popup is open
+        PixelSearch, , , 711,70, 712, 71, 0x000000, 0, Fast
+        if ErrorLevel{ ; IF not found
+
+        }else{
+            MouseMove, 726,147, 2
+            randomSleep()
+            MouseClick, left
+
+            randomSleepRange(800,1000)
+            
+            ; Scan for being in the mine
+            PixelSearch, , , 980, 235, 982, 237, 0x425563, 0, Fast
+            if ErrorLevel{ ; IF not found
+                continue
+            }
+            break
+        }
     }
+
+    Send, {Ctrl Up}
 
     MouseMove, 1382, 664, 2
     ; Scan for the "end DH" thing
@@ -805,9 +653,13 @@ toTheMine(){
     MouseClick, left
     randomSleep()
 
+    
+
     ; Sit
     Send, {F1}
     randomSleepRange(12000,13000) ;Wait for stam
+
+    StartTime := A_TickCount
 
     startRun:
 
@@ -821,8 +673,14 @@ toTheMine(){
     jumpNum := 1
     Loop{
 
+        if (A_TickCount > StartTime+180000){
+            Goto, endMineRun
+        }
+
+        randomSleepRange(200,300)
+        
         ; Check to make sure we didn't go down a ladder by accient
-        PixelSearch, , , 842, 463, 844, 465, 0x5D6276, 0, Fast
+        PixelSearch, , , 840, 460, 850, 470, 0x5D6276, 0, Fast
         if ErrorLevel{ ; IF not found
         }else{
             randomSleepRange(1000,1300)
@@ -879,8 +737,7 @@ toTheMine(){
             MouseClick, Left
             jumpNum := 1
         }
-        
-        randomSleepRange(200,300)
+    
     }
     randomSleepRange(500,700)
 
@@ -893,6 +750,10 @@ toTheMine(){
     ;2nd level
     Loop{
 
+        if (A_TickCount > StartTime+180000){
+            Goto, endMineRun
+        }
+
         ; Check to make sure we didn't go down a ladder by accient
         PixelSearch, , , 842, 463, 844, 465, 0x5D6276, 0, Fast
         if ErrorLevel{ ; IF not found
@@ -904,7 +765,7 @@ toTheMine(){
         ; look for ladder
         PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
         if ErrorLevel{ ; IF not found
-
+            
         }else{
             randomSleepRange(1000,1300)
             PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
@@ -946,77 +807,32 @@ toTheMine(){
             MouseClick, Left
             jumpNum++
         }else{ ; 1 jump left
-            Random, x, 948-30, 948+30
-            Random, y, 672-30, 672+30
+            checkIfMinerTooLow()
+            if (checkIfMinerTooLow() = false){
+                Random, x, 948-30, 948+30
+                Random, y, 672-30, 672+30
 
-            MouseMove, x, y, 2
-            randomSleepRange(50,100)
-            MouseClick, Left
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
+                MouseClick, Left
+                
+            }
             jumpNum := 1
         }
 
         randomSleepRange(300,400)
     }
 
-    ; Hop to allow the crystal check
-    Random, amountOfJumps, 3, 10
-    Loop % amountOfJumps{
-        MouseMove, 1024, 579, 2
-        randomSleepRange(50,100)
-        MouseClick, Left
-        randomSleepRange(500,700)
-    }
-
-    ; 3rd level
-    Random, amountOfJumps, 1, 10
-    Loop % amountOfJumps{
-
-        ; look for ladder
-        PixelSearch, Px, Py, 647, 223, 1312, 578, 0x587D91, 0, Fast
-        if ErrorLevel{ ; IF not found
-
-        }else{
-            randomSleepRange(1000,1300)
-            PixelSearch, Px, Py, 647, 223, 1153, 578, 0x587D91, 0, Fast
-            if ErrorLevel{
-                continue
-            }
-            MouseMove, Px, Py, 2
-            randomSleep()
-            MouseClick, Left
-
-            randomSleepRange(1000,2000)
-            break
-        }
-
-        ; 2 jumps up
-        if (jumpNum = 1 || jumpNum = 2){
-            Random, x, 1203-30, 1203+30
-            Random, y, 296-30, 296+30
-
-            MouseMove, x, y, 2
-            randomSleepRange(50,100)
-            MouseClick, Left
-            jumpNum++
-        }else{ ; 1 jump right
-            Random, x, 1215-30, 1215+30
-            Random, y, 620-30, 620+30
-
-            MouseMove, x, y, 2
-            randomSleepRange(50,100)
-            MouseClick, Left
-            jumpNum := 1
-        }
-        
-        randomSleepRange(200,300)
-    }
+    endMineRun:
 
     global dropX
     global dropY
     Send, {CTRL UP}
 
     scatterMiner()
+    moveAwayFromMiners()
     prepareMiner()
+    
 
     randomSleep()
     MouseMove, dropX, dropY
@@ -1024,95 +840,6 @@ toTheMine(){
     MouseClick, Right
     randomSleep()
 }
-
-; scatterMiners(){
-;     randomSleepRange(2000,3000)
-;     global isPause
-;     global account
-;     isPause := true
-;     account := 1
-    
-;     loop, 11{
-;         switchAccount()
-;         randomSleepRange(1000,2000)
-;         ; do DH
-
-;         MouseMove, 648,558,2
-;         randomSleep()
-;         MouseClick, right
-;         randomSleep()
-
-;         ; jump to the center
-        
-
-;         Random, amountOfJumps, 1, 7
-;         Send, {Ctrl down}
-;         loop % amountOfJumps{
-;             Random, x, 648-50, 648+50
-;             Random, y, 558-50, 558+50
-            
-;             MouseMove, x,y,2
-;             randomSleep()
-;             MouseClick, left
-;             randomSleepRange(300,500)
-;         }
-;         Send, {Ctrl Up}
-;         Random, jumpDir,1,4
-
-;         if (jumpDir = 1){
-;             Send, {Ctrl down}
-;             loop % amountOfJumps{
-;                 Random, x, 423, 920
-;                 Random, y, 90, 406
-                
-;                 MouseMove, x,y,2
-;                 randomSleep()
-;                 MouseClick, left
-;                 randomSleepRange(300,500)
-;             }
-;             Send, {Ctrl Up}
-;         }else if (jumpDir = 2){
-;             Send, {Ctrl down}
-;             loop % amountOfJumps{
-;                 Random, x, 920, 1417
-;                 Random, y, 90, 406
-                
-;                 MouseMove, x,y,2
-;                 randomSleep()
-;                 MouseClick, left
-;                 randomSleepRange(300,500)
-;             }
-;             Send, {Ctrl Up}
-;         }else if (jumpDir = 3){
-;             Send, {Ctrl down}
-;             loop % amountOfJumps{
-;                 Random, x, 423, 920
-;                 Random, y, 406, 720
-                
-;                 MouseMove, x,y,2
-;                 randomSleep()
-;                 MouseClick, left
-;                 randomSleepRange(300,500)
-;             }
-;             Send, {Ctrl Up}
-;         }else{
-;             Send, {Ctrl down}
-;             loop % amountOfJumps{
-;                 Random, x, 20, 1417
-;                 Random, y, 406, 720
-                
-;                 MouseMove, x,y,2
-;                 randomSleep()
-;                 MouseClick, left
-;                 randomSleepRange(300,500)
-;             }
-;             Send, {Ctrl Up}
-;         }
-
-        
-;     }
-    
-; }
 
 scatterMiner(){
     randomSleepRange(2000,3000)
@@ -1122,103 +849,78 @@ scatterMiner(){
     MouseClick, right
     randomSleep()
 
-    ; jump to the center
+
     
+    ; Hop to center of room
+    Random, amountOfJumps, 8, 24
+    Loop % amountOfJumps{
+        Random, x, 1024-20, 1024+20
+        Random, y, 579-20, 579+20
 
-    Random, amountOfJumps, 1, 7
-    Send, {Ctrl down}
-    loop % amountOfJumps{
-        Random, x, 648-50, 648+50
-        Random, y, 558-50, 558+50
-        
-        MouseMove, x,y,2
-        randomSleep()
-        MouseClick, left
-        randomSleepRange(300,500)
+        MouseMove, x, y, 2
+        randomSleepRange(50,100)
+        Send, {Ctrl Down}
+        MouseClick, Left
+        Send, {Ctrl Up}
+        randomSleepRange(50,100)
+        MouseClick, Left
+        randomSleepRange(500,700)
     }
-    Send, {Ctrl Up}
-    Random, jumpDir,1,4
 
-    if (jumpDir = 1){
-        Send, {Ctrl down}
-        loop % amountOfJumps{
-            Random, x, 423, 920
-            Random, y, 90, 406
+
+    
+    ; Random, jumpDir,1,4
+
+    ; if (jumpDir = 1){
+    ;     Send, {Ctrl down}
+    ;     loop % amountOfJumps{
+    ;         Random, x, 423, 920
+    ;         Random, y, 90, 406
             
-            MouseMove, x,y,2
-            randomSleep()
-            MouseClick, left
-            randomSleepRange(300,500)
-        }
-        Send, {Ctrl Up}
-    }else if (jumpDir = 2){
-        Send, {Ctrl down}
-        loop % amountOfJumps{
-            Random, x, 920, 1417
-            Random, y, 90, 406
+    ;         MouseMove, x,y,2
+    ;         randomSleep()
+    ;         MouseClick, left
+    ;         randomSleepRange(300,500)
+    ;     }
+    ;     Send, {Ctrl Up}
+    ; }else if (jumpDir = 2){
+    ;     Send, {Ctrl down}
+    ;     loop % amountOfJumps{
+    ;         Random, x, 920, 1417
+    ;         Random, y, 90, 406
             
-            MouseMove, x,y,2
-            randomSleep()
-            MouseClick, left
-            randomSleepRange(300,500)
-        }
-        Send, {Ctrl Up}
-    }else if (jumpDir = 3){
-        Send, {Ctrl down}
-        loop % amountOfJumps{
-            Random, x, 423, 920
-            Random, y, 406, 720
+    ;         MouseMove, x,y,2
+    ;         randomSleep()
+    ;         MouseClick, left
+    ;         randomSleepRange(300,500)
+    ;     }
+    ;     Send, {Ctrl Up}
+    ; }else if (jumpDir = 3){
+    ;     Send, {Ctrl down}
+    ;     loop % amountOfJumps{
+    ;         Random, x, 423, 920
+    ;         Random, y, 406, 720
             
-            MouseMove, x,y,2
-            randomSleep()
-            MouseClick, left
-            randomSleepRange(300,500)
-        }
-        Send, {Ctrl Up}
-    }else{
-        Send, {Ctrl down}
-        loop % amountOfJumps{
-            Random, x, 20, 1417
-            Random, y, 406, 720
+    ;         MouseMove, x,y,2
+    ;         randomSleep()
+    ;         MouseClick, left
+    ;         randomSleepRange(300,500)
+    ;     }
+    ;     Send, {Ctrl Up}
+    ; }else{
+    ;     Send, {Ctrl down}
+    ;     loop % amountOfJumps{
+    ;         Random, x, 920, 1417
+    ;         Random, y, 406, 720
             
-            MouseMove, x,y,2
-            randomSleep()
-            MouseClick, left
-            randomSleepRange(300,500)
-        }
-        Send, {Ctrl Up}
-    }
+    ;         MouseMove, x,y,2
+    ;         randomSleep()
+    ;         MouseClick, left
+    ;         randomSleepRange(300,500)
+    ;     }
+    ;     Send, {Ctrl Up}
+    ; }
 }
-
-; prepareMiners(){
-;     randomSleepRange(2000,3000)
-;     global isPause
-;     global account
-;     isPause := true
-;     account := 1
-    
-;     loop, 11{
-;         switchAccount()
-;         randomSleepRange(1000,2000)
-
-;         ; Grab DH
-;         MouseMove, 1174,785, 2
-;         randomSleep()
-;         click, down
-;         randomSleep()
-;         MouseMove, 1162,665, 2
-;         randomSleep()
-;         ; drop DH
-;         click, up
-;         randomSleep()
-
-;         ; open inventory
-;         MouseMove, 983, 764, 2
-;         randomSleep()
-;         MouseClick, left
-;         randomSleepRange(1000,1200)
-;     }
-; }
 
 prepareMiner(){
     ; Grab DH
@@ -1239,7 +941,163 @@ prepareMiner(){
     randomSleepRange(1000,1200)
 }
 
+moveAwayFromMiners(){
 
+
+    boxX := [[749,1033],[749,1033],[749,843],[959,1033]]
+    boxY := [[236,304],[446,525],[304,446],[304,446]]
+    
+
+    moveAway := false
+
+    Loop, 4{
+        x1 := boxX[A_Index][1]
+        x2 := boxX[A_Index][2]
+
+        y1 := boxY[A_Index][1]
+        y2 := boxY[A_Index][2]
+
+        createBox5("f1c40f")
+        box5(x1, y1, x2-x1, y2-y1, 1, "out")
+
+        ; Search for male miners
+        PixelSearch, pX, pY, x1, y1, x2, y2, 0x8A7461, 3, Fast
+        if ErrorLevel{ ; IF not found
+            ; Search for female miners
+            PixelSearch, pX, pY, x1, y1, x2, y2, 0xEFBA6D, 3, Fast
+            if ErrorLevel{ ; IF not found
+                ; Search for female miners
+                PixelSearch, pX, pY, x1, y1, x2, y2, 0xE2E6D2, 3, Fast
+                if ErrorLevel{ ; IF not found
+                    PixelSearch, pX, pY, x1, y1, x2, y2, 0xFFFFFF, 3, Fast
+                    if ErrorLevel{ ; IF not found
+                        ; MsgBox, Nothing found
+                    }else{
+                        createBox4("e74c3c")
+                        box4(pX-5, pY-5, 10, 10, 1, "out")
+                        moveAway := true
+                    }
+                }else{
+                    createBox4("e74c3c")
+                    box4(pX-5, pY-5, 10, 10, 1, "out")
+                    moveAway := true
+                }
+            }else{
+                createBox4("e74c3c")
+                box4(pX-5, pY-5, 10, 10, 1, "out")
+                moveAway := true
+            }
+        }else{
+            createBox4("FF0000")
+            box4(pX-5, pY-5, 10, 10, 1, "out")
+            moveAway := true
+        }
+
+        ; randomSleepRange(1000,2000)
+        ; if (moveAway){
+        ;     MsgBox % x1 . "," . y1 . "         " . x2 . "," . y2
+        ;     moveAway := false
+        ; }
+        RemoveBox5()
+        
+    }
+
+    if (moveAway){
+        Random, x, 482, 1339
+        Random, y, 102, 629
+
+        MouseMove, x, y, 2
+        randomSleep()
+        Send, {CTRL DOWN}
+        MouseClick, Left
+        Send, {CTRL UP}
+        MouseClick, Left
+        randomSleepRange(1000,1200)
+        Send, {f1}
+        randomSleep()
+        RemoveBox4()
+        moveAwayFromMiners()
+    }else{
+        Send, {f1}
+        randomSleep()
+    }
+
+
+}
+
+
+getXY(){
+
+    coords := StrSplit(StrReplace(StrReplace(StrReplace(OCR([517, 36, 65, 18]),"(",""),"{",""),")",""),",")
+    ; x := coords[1]
+    ; y := coords[1]
+    
+    
+
+    return coords
+}
+
+checkIfMinerTooLow(){
+    coords := getXY()
+    x := coords[1]
+    y := coords[2]
+
+    if (y > 120){
+        MouseMove, 1233,407
+        randomSleep()
+        MouseClick, left
+        randomSleepRange(400,600)
+        return true
+    }
+    return false
+
+}
+
+tradeOverGoldAndGems(){
+
+    MouseMove, 631, 295, 2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+    ; Write in amount of gold
+    Send % getInventoryGold()
+    randomSleep()
+
+    gemCount := 0
+    ; Trade Gem Loop
+    loop{
+        randomSleep()
+        PixelSearch, Px, Py, topX, topY, botX, botY, 0xFF7FEC, 1, Fast ; VIOLET GEM
+        if ErrorLevel{ ; IF not found
+            PixelSearch, Px, Py, topX, topY, botX, botY, 0xEF511B, 0, Fast ; MOON GEM
+            if ErrorLevel{ ; IF not found
+                randomSleepRange(2000,3000)
+                break
+            }else{ ; if found
+                MouseMove, Px, Py
+                randomSleep()
+                MouseClick, Left
+                MouseMove, 530,331
+                randomSleep()
+                MouseClick, Left
+                gemCount++
+            }
+        }else{ ; if found
+            MouseMove, Px, Py
+            randomSleep()
+            MouseClick, Left
+            MouseMove, 530,331
+            randomSleep()
+            MouseClick, Left
+            gemCount++
+        }
+        if (gemCount > 6){
+            MsgBox, Too many gems! Manually trade them over!
+            break
+        }
+        randomSleepRange(300,500)
+    }
+}
 
 ; Make sure the mouse is holding the current ore
 checkHoldingOre(oreColour){
