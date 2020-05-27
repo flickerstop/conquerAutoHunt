@@ -10,6 +10,6 @@ Loop{
 esc::exitapp
 return
 
-Pause::
-Pause,Toggle
+space::
+ Pause,Toggle
 return

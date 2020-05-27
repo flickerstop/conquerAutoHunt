@@ -220,6 +220,7 @@ g::
         switchAccount()
         randomSleepRange(1000,2000)
         bank()
+        withdrawBank()
         randomSleepRange(1000,2000)
     }
     MsgBox, All selling done. Click M when all inventorys open and ready to hop back
@@ -270,7 +271,6 @@ m::
         toTheMine()
         randomSleepRange(1000,2000)
     }
-    MsgBox, Banking done! Click OK when all Miners back
     isPause := false
 return
 
@@ -335,7 +335,7 @@ bank(){
     MouseMove, 967, 88, 2
     randomSleep()
     MouseClick, left
-    randomSleepRange(6000,7000)
+    randomSleepRange(8000,10000)
 
     ; Open pharm
     MouseMove, 981, 74, 2
@@ -427,6 +427,10 @@ bank(){
 
 getInventoryGold(){
     return StrReplace(OCR([1271, 418, 82, 20]),",","")
+}
+
+getBankGold(){
+    return StrReplace(OCR([529,220, 609-529, 234-220]),",","")
 }
 ; FF7FEC VIOLET GEM
 ; EF511B MOON GEM
@@ -638,13 +642,6 @@ toTheMine(){
             break
         }
 
-        ;and stam is full
-        PixelSearch, , , 447,720, 451,724, 0x927E02, 0, Fast
-        if ErrorLevel{ ; IF not found
-            Send, {F1}
-        }else{
-            Goto, startRun
-        }
     }
 
     ; Stop DH
@@ -664,9 +661,11 @@ toTheMine(){
     startRun:
 
     MouseMove, 884, 684, 1
+    MouseClick, left
     randomSleep()
     MouseClick, right
     randomSleep()
+    MouseClick, left
 
     Send, {CTRL DOWN}
     ;first level
@@ -746,8 +745,93 @@ toTheMine(){
     randomSleepRange(50,100)
     MouseClick, Left
     randomSleepRange(500,700)
+    MouseClick, Left
 
     ;2nd level
+    Loop{
+
+        if (A_TickCount > StartTime+180000){
+            Goto, endMineRun
+        }
+
+        ; Check to make sure we didn't go down a ladder by accient
+        PixelSearch, , , 842, 463, 844, 465, 0x5D6276, 0, Fast
+        if ErrorLevel{ ; IF not found
+        }else{
+            randomSleepRange(1000,1300)
+            break
+        }
+
+        ; look for ladder
+        PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+        if ErrorLevel{ ; IF not found
+            
+        }else{
+            randomSleepRange(1000,1300)
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{
+                continue
+            }
+            Send, {Ctrl Up}
+            MouseMove, Px, Py, 2
+            randomSleep()
+            MouseClick, Left
+            Send, {CTRL DOWN}
+
+            randomSleepRange(3000,4000)
+            break
+        }
+        if (jumpNum = 1){
+            Random, x, 1245-30, 1245+30
+            Random, y, 435-30, 435+30
+
+            ; Check if jump is useless due to wall
+            PixelSearch, , , x-1, y-1, x+1, y+1, 0x000000, 1, Fast
+            if ErrorLevel{
+                
+            }else{
+                jumpNum++
+                continue
+            }
+
+            MouseMove, x, y, 2
+            randomSleepRange(50,100)
+            MouseClick, Left
+            jumpNum++
+        }else if (jumpNum = 2){
+            Random, x, 1202-30, 1202+30
+            Random, y, 634-30, 634+30
+
+            MouseMove, x, y, 2
+            randomSleepRange(50,100)
+            MouseClick, Left
+            jumpNum++
+        }else{ ; 1 jump left
+            ; checkIfMinerTooLow()
+            ; if (checkIfMinerTooLow() = false){
+                Random, x, 948-30, 948+30
+                Random, y, 672-30, 672+30
+
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
+                MouseClick, Left
+                
+            ; }
+            jumpNum := 1
+        }
+
+        randomSleepRange(300,400)
+    }
+
+    ; Hop to allow the crystal check
+    MouseMove, 1024, 579, 2
+    randomSleepRange(50,100)
+    MouseClick, Left
+    randomSleepRange(500,700)
+    MouseClick, Left
+
+    ;NOTE trying to go down to 4th level now
+    ;3nd level
     Loop{
 
         if (A_TickCount > StartTime+180000){
@@ -867,59 +951,6 @@ scatterMiner(){
         randomSleepRange(500,700)
     }
 
-
-    
-    ; Random, jumpDir,1,4
-
-    ; if (jumpDir = 1){
-    ;     Send, {Ctrl down}
-    ;     loop % amountOfJumps{
-    ;         Random, x, 423, 920
-    ;         Random, y, 90, 406
-            
-    ;         MouseMove, x,y,2
-    ;         randomSleep()
-    ;         MouseClick, left
-    ;         randomSleepRange(300,500)
-    ;     }
-    ;     Send, {Ctrl Up}
-    ; }else if (jumpDir = 2){
-    ;     Send, {Ctrl down}
-    ;     loop % amountOfJumps{
-    ;         Random, x, 920, 1417
-    ;         Random, y, 90, 406
-            
-    ;         MouseMove, x,y,2
-    ;         randomSleep()
-    ;         MouseClick, left
-    ;         randomSleepRange(300,500)
-    ;     }
-    ;     Send, {Ctrl Up}
-    ; }else if (jumpDir = 3){
-    ;     Send, {Ctrl down}
-    ;     loop % amountOfJumps{
-    ;         Random, x, 423, 920
-    ;         Random, y, 406, 720
-            
-    ;         MouseMove, x,y,2
-    ;         randomSleep()
-    ;         MouseClick, left
-    ;         randomSleepRange(300,500)
-    ;     }
-    ;     Send, {Ctrl Up}
-    ; }else{
-    ;     Send, {Ctrl down}
-    ;     loop % amountOfJumps{
-    ;         Random, x, 920, 1417
-    ;         Random, y, 406, 720
-            
-    ;         MouseMove, x,y,2
-    ;         randomSleep()
-    ;         MouseClick, left
-    ;         randomSleepRange(300,500)
-    ;     }
-    ;     Send, {Ctrl Up}
-    ; }
 }
 
 prepareMiner(){
@@ -1097,6 +1128,18 @@ tradeOverGoldAndGems(){
         }
         randomSleepRange(300,500)
     }
+}
+
+withdrawBank(){
+    MouseMove,552,196,2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+    Send % getBankGold()
+    randomSleep()
+    MouseMove, 477, 163, 2
+    randomSleep()
+    MouseClick, left
 }
 
 ; Make sure the mouse is holding the current ore
