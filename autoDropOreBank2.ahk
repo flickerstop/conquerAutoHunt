@@ -68,44 +68,6 @@ Loop{
         randomSleep()
         attempts := 0
     }
-    ; Check for logged out
-    PixelSearch, Px, Py, shadowX-10, shadowY-10, shadowX+10, shadowY+10, 0xFFFFFF, 0, Fast
-    if ErrorLevel{ ; IF not found
-
-    }else{
-        randomSleepRange(1000,2000)
-        ;check to see if still there (not someone jumping by)
-        PixelSearch, Px, Py, shadowX-10, shadowY-10, shadowX+10, shadowY+10, 0xFFFFFF, 0, Fast
-        if ErrorLevel{ ; IF not found
-            continue
-        }
-        ; Click OK on disconnect
-        randomSleep()
-        MouseMove, 1091, 473, 2
-        randomSleep()
-        MouseClick, Left
-        ; Wait for login screen to start
-        randomSleepRange(3000,4000)
-        ; Click on password Field
-        MouseMove, 898, 717, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleep()
-        ; Put in password
-        Send, password
-        randomSleep()
-        ; Click on login
-        MouseMove, 1114, 759, 2
-        randomSleep()
-        MouseClick, Left
-        ; Wait for logging in to finish
-        randomSleepRange(12000,15000)
-        ; Open inventory
-        MouseMove, 980, 765, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleep()
-    }
 
     ; Search for IRON ore
     PixelSearch, Px, Py, topX, topY, botX, botY, 0x555455, 0, Fast
@@ -290,6 +252,21 @@ switchAccount(){
 
     accountX := [538,641,752,861,960,1065,1166,1274,1373,1479,1588]
 
+    loop{
+        if (WinExist("Tip")){
+            randomSleep()
+            WinActivate, Tip
+            randomSleep()
+            MouseMove, 1058,465
+            randomSleep()
+            MouseClick, Left
+            randomSleep()
+        }else{
+            break
+        }
+    }
+
+    randomSleepRange(5000,6000)
     
     MouseMove, accountX[account], 855, 2
     randomSleep()
@@ -301,6 +278,7 @@ switchAccount(){
         account := 1
     }
     
+    checkIfDC()
 }
 
 bank(){
@@ -1099,7 +1077,7 @@ checkHoldingOre(oreColour){
 }
 
 checkIfDC(){
-    PixelSearch, , , 775-1,674-1, 775+1,674+1, 0x369FC9, 0, Fast
+    PixelSearch, , , 856-1,145-1, 856+1,145+1, 0x3CBCCA, 0, Fast
     if ErrorLevel{ ; IF not found
         return
     }
@@ -1107,12 +1085,28 @@ checkIfDC(){
     randomSleepRange(1000,2000)
 
     ;select password
-    MouseMove, 990,721, 2
+    MouseMove, 902,720, 2
     MouseClick, Left
     randomSleep()
+    MouseClick, Left
+    randomSleep()
+    Send, {BackSpace}{BackSpace}{BackSpace}{BackSpace}{BackSpace}{BackSpace}{BackSpace}{BackSpace}
     Send, password
 
+    randomSleep()
+    MouseMove, 1113, 755, 2
+    randomSleep()
+    MouseClick, Left
+    randomSleep()
+
     randomSleepRange(30000,40000)
+
+    PixelSearch, , , 856-1,145-1, 856+1,145+1, 0x3CBCCA, 0, Fast
+    if ErrorLevel{ ; IF not found
+        
+    }else{
+        checkIfDC()
+    }
 
     ; Close "vote"
     MouseMove, 1103, 337, 2
