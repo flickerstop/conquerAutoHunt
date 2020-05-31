@@ -1,6 +1,14 @@
+#Include drawBox.ahk
+#include .\lib\Vis2.ahk
+
 CoordMode, Mouse, Screen
 CoordMode, Pixel, Screen
 SetKeyDelay 30,50
+
+topX := 1184
+topY := 62
+botX := 1395
+botY := 401
 
 $*Numpad5:: 
 {
@@ -44,6 +52,10 @@ $*Numpad5::
 }
 Return
 
+f5::
+    tradeOverGoldAndGems()
+return
+
 
 ;XButton2::msgbox You pressed Mouse5
 
@@ -54,16 +66,82 @@ return
 k::
     Send, 00000
 
-$*Numpad7:: 
-{
+tradeOverGoldAndGems(){
 
-    MouseGetPos, storeX, storeY
+    global topX 
+    global topY 
+    global botX 
+    global botY 
+
+    MouseMove, 631, 295, 2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+    ; Write in amount of gold
+    Send % (getInventoryGold() - 30000)
+    randomSleep()
+
+    gemCount := 0
+    ; Trade Gem Loop
+    loop{
+        randomSleep()
+        PixelSearch, Px, Py, topX, topY, botX, botY, 0xFF7FEC, 1, Fast ; VIOLET GEM
+        if ErrorLevel{ ; IF not found
+            PixelSearch, Px, Py, topX, topY, botX, botY, 0xEF511B, 0, Fast ; MOON GEM
+            if ErrorLevel{ ; IF not found
+                randomSleepRange(2000,3000)
+                break
+            }else{ ; if found
+                MouseMove, Px, Py
+                randomSleep()
+                MouseClick, Left
+                MouseMove, 530,331
+                randomSleep()
+                MouseClick, Left
+                gemCount++
+            }
+        }else{ ; if found
+            MouseMove, Px, Py
+            randomSleep()
+            MouseClick, Left
+            MouseMove, 530,331
+            randomSleep()
+            MouseClick, Left
+            gemCount++
+        }
+        if (gemCount = 6){
+            gemCount := 0
+            MouseMove, 568,339,2
+            randomSleep()
+            MouseClick, left
+            randomSleep()
+        }
+        randomSleepRange(300,500)
+    }
+    MouseMove, 614,348,2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+
+    MouseMove, 538,369,2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+
+
 }
-return
 
-$*Numpad9:: 
-{
 
-    MouseGetPos, invenX, invenY
+randomSleep(){
+    Random, x, 150, 300
+    Sleep, x
 }
-return
+
+randomSleepRange(min,max){
+    Random, x, min, max
+    Sleep, x
+}
+
+getInventoryGold(){
+    return StrReplace(OCR([1271, 418, 82, 20]),",","")
+}

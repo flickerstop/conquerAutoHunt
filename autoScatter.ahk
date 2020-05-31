@@ -1,8 +1,9 @@
 
+isCtrlDown := false
 
-
+Pause,Toggle
 Loop{
-    Random, sleepTime, 50, 200
+    Random, sleepTime, 50, 100
     MouseClick, Right
     Sleep, sleepTime
 }
@@ -10,6 +11,13 @@ Loop{
 esc::exitapp
 return
 
-space::
- Pause,Toggle
+\::
+    Pause,Toggle
+    if (isCtrlDown){
+        Send, {CTRL UP}
+        isCtrlDown := false
+    }else{
+        Send, {CTRL DOWN}
+        isCtrlDown := true
+    }
 return
