@@ -16,6 +16,8 @@ dropY := 544
 shadowX := 848
 shadowY := 416
 
+dcAttempts := 0
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Walk Area
 ;Get the top Left corner
@@ -202,7 +204,7 @@ m::
         MouseMove, 1205, 83, 2
         randomSleep()
         MouseClick, right
-        randomSleepRange(2000,3000)
+        randomSleepRange(5000,6000)
 
         ; Blue marker thing
         MouseMove, 976, 344, 2
@@ -476,7 +478,7 @@ wharehouse(){
     MouseMove, 1205, 83, 2
     randomSleep()
     MouseClick, right
-    randomSleepRange(3000,4000)
+    randomSleepRange(5000,6000)
 
     PixelSearch, , , 484, 201, 486, 203, 0x52717B, 0, Fast
     if ErrorLevel{ ; IF not found
@@ -561,7 +563,7 @@ toTheMine(){
                 MouseMove, Px, Py-30, 2
                 randomSleepRange(50,100)
                 MouseClick, left
-                randomSleepRange(50,100)
+                randomSleepRange(300,500)
                 clickAttempts++
             }
         }
@@ -577,7 +579,7 @@ toTheMine(){
         }
 
         
-        randomSleepRange(300,500)
+        randomSleepRange(100,200)
         ; Check to see if popup is open
         PixelSearch, , , 711,70, 712, 71, 0x000000, 0, Fast
         if ErrorLevel{ ; IF not found
@@ -589,11 +591,12 @@ toTheMine(){
 
             randomSleepRange(800,1000)
             
-            ; Scan for being in the mine
-            PixelSearch, , , 980, 235, 982, 237, 0x425563, 0, Fast
-            if ErrorLevel{ ; IF not found
-                continue
-            }
+            ;FIXME Removed this to stop a bug, might cause bugs
+            ; ; Scan for being in the mine
+            ; PixelSearch, , , 980, 235, 982, 237, 0x425563, 0, Fast
+            ; if ErrorLevel{ ; IF not found
+            ;     continue
+            ; }
             break
         }
     }
@@ -639,6 +642,7 @@ toTheMine(){
     ;first level
     jumpNum := 1
     Loop{
+        Send, {CTRL DOWN}
 
         if (A_TickCount > StartTime+180000){
             Goto, endMineRun
@@ -711,12 +715,14 @@ toTheMine(){
     ; Hop to allow the crystal check
     MouseMove, 1024, 579, 2
     randomSleepRange(50,100)
+    MouseClick, right
     MouseClick, Left
     randomSleepRange(500,700)
     MouseClick, Left
 
     ;2nd level
     Loop{
+        Send, {CTRL DOWN}
 
         if (A_TickCount > StartTime+180000){
             Goto, endMineRun
@@ -749,6 +755,7 @@ toTheMine(){
             randomSleepRange(3000,4000)
             break
         }
+
         if (jumpNum = 1){
             Random, x, 1245-30, 1245+30
             Random, y, 435-30, 435+30
@@ -765,6 +772,9 @@ toTheMine(){
             MouseMove, x, y, 2
             randomSleepRange(50,100)
             MouseClick, Left
+            Send, {Ctrl Up}
+            MouseClick, Left
+            Send, {CTRL DOWN}
             jumpNum++
         }else if (jumpNum = 2){
             Random, x, 1202-30, 1202+30
@@ -773,16 +783,22 @@ toTheMine(){
             MouseMove, x, y, 2
             randomSleepRange(50,100)
             MouseClick, Left
+            Send, {Ctrl Up}
+            MouseClick, Left
+            Send, {CTRL DOWN}
             jumpNum++
         }else{ ; 1 jump left
             ; checkIfMinerTooLow()
             ; if (checkIfMinerTooLow() = false){
-                Random, x, 948-30, 948+30
-                Random, y, 672-30, 672+30
+            Random, x, 948-30, 948+30
+            Random, y, 672-30, 672+30
 
-                MouseMove, x, y, 2
-                randomSleepRange(50,100)
-                MouseClick, Left
+            MouseMove, x, y, 2
+            randomSleepRange(50,100)
+            MouseClick, Left
+            Send, {Ctrl Up}
+            MouseClick, Left
+            Send, {CTRL DOWN}
                 
             ; }
             jumpNum := 1
@@ -793,6 +809,7 @@ toTheMine(){
 
     ; Hop to allow the crystal check
     MouseMove, 1024, 579, 2
+    MouseClick, right
     randomSleepRange(50,100)
     MouseClick, Left
     randomSleepRange(500,700)
@@ -801,7 +818,7 @@ toTheMine(){
     ;NOTE trying to go down to 4th level now
     ;3nd level
     Loop{
-
+        Send, {CTRL DOWN}
         if (A_TickCount > StartTime+180000){
             Goto, endMineRun
         }
@@ -1077,6 +1094,7 @@ checkHoldingOre(oreColour){
 }
 
 checkIfDC(){
+    global dcAttempts
     PixelSearch, , , 856-1,145-1, 856+1,145+1, 0x3CBCCA, 0, Fast
     if ErrorLevel{ ; IF not found
         return
@@ -1105,6 +1123,17 @@ checkIfDC(){
     if ErrorLevel{ ; IF not found
         
     }else{
+        randomSleep()
+        MouseMove, 898,463, 2
+        randomSleep()
+        MouseClick, Left
+        randomSleepRange(3000,4000)
+        dcAttempts++
+
+        if (dcAttempts > 4){
+            dcAttempts := 0
+            return
+        }
         checkIfDC()
     }
 

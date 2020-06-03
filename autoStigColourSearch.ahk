@@ -49,7 +49,7 @@ loop{
 
     Send, {f1}
     randomSleep()
-    randomSleepRange(1000,2000)
+    randomSleepRange(400,600)
 }
 
 esc::
