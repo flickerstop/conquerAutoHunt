@@ -56,7 +56,7 @@ randomSleepRange(2000,3000)
 attempts := 0
 account := 1
 isPause := false
-
+switchAccount()
 Loop{
     
     if (isPause = true){
@@ -239,6 +239,15 @@ m::
 return
 
 
+f5::
+    tradeOverGoldAndGems()
+return
+
+f8::
+    resetFromDead()
+    Pause,Toggle
+return
+
 randomSleep(){
     Random, x, 300, 500
     Sleep, x
@@ -281,6 +290,10 @@ switchAccount(){
     }
     
     checkIfDC()
+    checkIfPopupOpen()
+    checkIfSettingsWrong()
+    checkIfInventoryNotOpen()
+    checkIfDead()
 }
 
 bank(){
@@ -292,13 +305,26 @@ bank(){
     randomSleepRange(500,1000)
 
 
-    ; ape scroll
-    MouseMove, 1206,82, 2
-    randomSleep()
+    ; check to see if the player is not already at ape
+    PixelSearch, , , 887-1, 680-1, 887+1, 680+1, 0x947DB0, 1, Fast
+    if ErrorLevel{ ; IF not found
+        ; ape scroll
+        MouseMove, 1206,82, 2
+        randomSleep()
 
-    ;right click to teleport
-    MouseClick, right
-    randomSleepRange(3000,4000)
+        ;right click to teleport
+        MouseClick, right
+        randomSleepRange(3000,4000)
+    }else{
+        ; Close Inventory
+        MouseMove, 970, 762, 2
+        randomSleep()
+        MouseClick, Left
+        randomSleep()
+        randomSleepRange(1000,2000)
+    }
+
+    
 
 
     ; Walk to pharm
@@ -317,8 +343,7 @@ bank(){
     ; Check to see if pharm is opened
     PixelSearch, , , 613-5, 283-5, 613+5, 283+5, 0x5A4929, 1, Fast
     if ErrorLevel{ ; IF not found
-        MsgBox, Pharm not opened! Manual banking needed!
-        return
+        MsgBox, Pharm not opened! Walk to the spot and open the pharm!
     }
 
     ; sell loop
@@ -713,12 +738,14 @@ toTheMine(){
     randomSleepRange(500,700)
 
     ; Hop to allow the crystal check
+    Send, {Ctrl Up}
     MouseMove, 1024, 579, 2
-    randomSleepRange(50,100)
     MouseClick, right
+    randomSleepRange(50,100)
     MouseClick, Left
     randomSleepRange(500,700)
     MouseClick, Left
+    Send, {CTRL DOWN}
 
     ;2nd level
     Loop{
@@ -808,12 +835,14 @@ toTheMine(){
     }
 
     ; Hop to allow the crystal check
+    Send, {Ctrl Up}
     MouseMove, 1024, 579, 2
     MouseClick, right
     randomSleepRange(50,100)
     MouseClick, Left
     randomSleepRange(500,700)
     MouseClick, Left
+    Send, {CTRL DOWN}
 
     ;NOTE trying to go down to 4th level now
     ;3nd level
@@ -1192,6 +1221,268 @@ checkIfDC(){
     randomSleep()
 
     randomSleepRange(2000,3000)
+}
+
+checkIfPopupOpen(){
+    ; Check if hourly thing open
+
+    ; Check to see if patch notes up
+    PixelSearch, OutputVarX, , 1245, 483, 1247, 485, 0x568CAC, 0,fast
+    if ErrorLevel{ ; IF not found
+
+    }else{
+        MouseMove, 1171, 253, 2
+        randomSleep()
+        MouseClick, Left
+        randomSleep()
+        randomSleepRange(1000,2000)
+    }
+
+    ; Check if vote is showing
+    PixelSearch, , , 1022-1,478-1, 1022+1,478+1, 0x00F584, 0, Fast
+    if ErrorLevel{ ; IF not found
+        return
+    }
+    randomSleep()
+    MouseMove, 1103,335,2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+}
+
+checkIfSettingsWrong(){
+    ; Check to see if arena button is up
+    PixelSearch, , , 975-1,708-1, 975+1, 708+1, 0x4AB2EF, 0, Fast
+    if ErrorLevel{ ; IF not found
+        return
+    }
+
+    ; Open Settings
+    MouseMove, 1229, 740, 2
+    randomSleep()
+    MouseClick, Left
+    randomSleep()
+    randomSleepRange(4000,5000)
+
+    ; Click the 5 buttons
+    buttonY := [527,465,406,349,287]
+    Loop, 5{
+        MouseMove, 1004, buttonY[A_Index], 2
+        randomSleep()
+        MouseClick, Left
+        randomSleepRange(2000,3000)
+    }
+    ; Close settings
+    MouseMove, 1060, 247, 2
+    randomSleep()
+    MouseClick, Left
+    randomSleep()
+
+}
+
+checkIfInventoryNotOpen(){
+    PixelSearch, , , 1255-1, 429-1, 1255+1, 429+1, 0x635131, 0, Fast
+    if ErrorLevel{ ; IF not found
+        ; Open Inventory
+        MouseMove, 970, 762, 2
+        randomSleep()
+        MouseClick, Left
+        randomSleep()
+        randomSleepRange(1000,2000)
+    }
+}
+
+checkIfDead(){
+    ; Check HP
+    PixelSearch, , , 434-1, 777-1, 434+1, 777+1, 0x887F74, 0, Fast
+    if ErrorLevel{ ; IF not found
+        return
+    }else{
+        PixelSearch, , , 1340-1, 654-1, 1340+1, 654+1, 0x94BED6, 0, Fast
+        if ErrorLevel{ ; IF not found
+            return
+        }else{
+            ; Start the DC train
+
+            account := 1
+            accountX := [538,641,752,861,960,1065,1166,1274,1373,1479,1588]
+
+            loop{
+                ; Close the DC tip
+                loop{
+                    if (WinExist("Tip")){
+                        randomSleep()
+                        WinActivate, Tip
+                        randomSleep()
+                        MouseMove, 1058,465
+                        randomSleep()
+                        MouseClick, Left
+                        randomSleep()
+                    }else{
+                        break
+                    }
+                }
+                randomSleepRange(1000,2000)
+                
+                MouseMove, accountX[account], 855, 2
+                randomSleep()
+                MouseClick, Left
+                randomSleep()
+
+                ; Check if account is logged out already
+                PixelSearch, , , 856-1,145-1, 856+1,145+1, 0x3CBCCA, 0, Fast
+                if ErrorLevel{ ; IF not found
+                    
+                }else{
+                    account++
+                    if (account = 12){
+                        MsgBox, One miner was detected dead. All logged out!
+                    }
+                    continue
+                }
+                ; Type DC
+                MouseMove, 758,741,2
+                randomSleep()
+                MouseClick, Left
+                randomSleep()
+                Send, /dc
+                Send, {enter}
+
+
+
+                account++
+                if (account = 12){
+                    MsgBox, One miner was detected dead. All logged out!
+                }
+            }
+        }
+    }
+}
+
+resetFromDead(){
+    account := 1
+    accountX := [538,641,752,861,960,1065,1166,1274,1373,1479,1588]
+    loop{
+        randomSleepRange(1000,2000)
+        
+        MouseMove, accountX[account], 855, 2
+        randomSleep()
+        MouseClick, Left
+        randomSleep()
+
+        ; Check for REV button
+        PixelSearch, , , 1340-1, 654-1, 1340+1, 654+1, 0x94BED6, 0, Fast
+        if ErrorLevel{ ; IF not found
+            account++
+            if (account = 12){
+                MsgBox, All Miners rev'd
+            }
+            continue
+        }
+
+        ; Click rev button
+        MouseMove, 1357,657, 2
+        randomSleep()
+        MouseClick, Left
+        randomSleepRange(3000,5000)
+
+        ; open inventory
+        MouseMove, 970, 762, 2
+        randomSleep()
+        MouseClick, Left
+        randomSleep()
+        randomSleepRange(1000,2000)
+
+        ; Check if player has both teleport scrolls
+        PixelSearch, , , 1213-1, 91-1, 1213+1, 91+1, 0x63AEDE, 0, Fast
+        if ErrorLevel{ ; IF not found
+            
+        }else{
+            PixelSearch, , , 1253-1, 91-1, 1253+1, 91+1, 0x29AED6, 0, Fast
+            if ErrorLevel{ ; IF not found
+                
+            }else{
+                ; Both Scrolls Found teleport to AC
+                MouseMove, 1213, 91, 2
+                randomSleep()
+                MouseClick, Right
+                randomSleep()
+            }
+        }
+
+
+
+        account++
+        if (account = 12){
+            MsgBox, All Miners rev'd
+        }
+    }
+
+}
+
+tradeOverGoldAndGems(){
+
+    global topX 
+    global topY 
+    global botX 
+    global botY 
+
+    MouseMove, 631, 295, 2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+    ; Write in amount of gold
+    Send % (getInventoryGold() - 30000)
+    randomSleep()
+
+    gemCount := 0
+    ; Trade Gem Loop
+    loop{
+        randomSleep()
+        PixelSearch, Px, Py, topX, topY, botX, botY, 0xFF7FEC, 1, Fast ; VIOLET GEM
+        if ErrorLevel{ ; IF not found
+            PixelSearch, Px, Py, topX, topY, botX, botY, 0xEF511B, 0, Fast ; MOON GEM
+            if ErrorLevel{ ; IF not found
+                randomSleepRange(2000,3000)
+                break
+            }else{ ; if found
+                MouseMove, Px, Py
+                randomSleep()
+                MouseClick, Left
+                MouseMove, 530,331
+                randomSleep()
+                MouseClick, Left
+                gemCount++
+            }
+        }else{ ; if found
+            MouseMove, Px, Py
+            randomSleep()
+            MouseClick, Left
+            MouseMove, 530,331
+            randomSleep()
+            MouseClick, Left
+            gemCount++
+        }
+        if (gemCount = 6){
+            gemCount := 0
+            MouseMove, 568,339,2
+            randomSleep()
+            MouseClick, left
+            randomSleep()
+        }
+        randomSleepRange(300,500)
+    }
+    MouseMove, 614,348,2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+
+    MouseMove, 538,369,2
+    randomSleep()
+    MouseClick, left
+    randomSleep()
+
+
 }
 
 ;070B0F Mine DUDE

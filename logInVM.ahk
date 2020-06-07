@@ -6,14 +6,17 @@ account := 1
 
 f1::
     run(1)
+    exitapp
 return
 
 f2::
     run(12)
+    exitapp
 return
 
 f3::
     run(23)
+    exitapp
 return
 
 run(accountID){
