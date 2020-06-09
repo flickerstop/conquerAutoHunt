@@ -1,6 +1,7 @@
 #Include drawBox.ahk
 #Include CConsole.ahk
 #include .\lib\Vis2.ahk
+#Include textOnScreen.ahk
 
 CoordMode, Mouse, Screen
 CoordMode, Pixel, Screen
@@ -15,212 +16,168 @@ topY := 62
 botX := 1395
 botY := 401
 
+account := 2
+gold := [0,0," 5  ",1,0,0,10,0,0,0,0]
+
 f8::
+    ;first level
+    jumpNum := 1
+    Loop{
+        textGui("Mine lvl 1\nHopping to Ladder\nJump #" . jumpNum)
+        ; TODO uncomment
+        ; if (isDeadNow()){
+        ;     resetIfDead()
+        ;     return
+        ; }
 
-    xLow := 1228
-    xHigh := 1300
+        MouseClick, right
 
-    yLow := 350
-    yHigh := 415
+        ; TODO uncomment
+        ;checkIfDCMidAction()
+        Send, {CTRL DOWN}
 
-    Random, x, 1228, 1300
-    Random, y, 350, 415
+        ; TODO uncomment
+        ; if (A_TickCount > StartTime+180000){
+        ;     Goto, endMineRun
+        ; }
 
-    createBox3("FFFFFF")
-    box3(xLow,yLow,xHigh-xLow,yHigh-yLow,1,"out")
+        randomSleepRange(200,300)
+        
+        ; Check to make sure we didn't go down a ladder by accient
+        PixelSearch, , , 840, 460, 850, 470, 0x5D6276, 0, Fast
+        if ErrorLevel{ ; IF not found
+        }else{
+            randomSleepRange(1000,1300)
+            break
+        }
 
-    createBox2("00FF00")
-    box2(483,198,540-483,250-198,1,"out")
+        ; look for ladder
+        PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+        if ErrorLevel{ ; IF not found
+
+        }else{
+            textGui("Mine lvl 1\nLadder Found!")
+            randomSleepRange(1000,1300)
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{
+                continue
+            }
+            Send, {Ctrl Up}
+            MouseMove, Px, Py, 2
+            randomSleep()
+            MouseClick, Left
+            Send, {CTRL DOWN}
+
+            waitForMomentStop()
+            ;check to make sure we went through
+            
+            PixelSearch, Px, Py, 1089-1, 169-1, 1089+1, 169+1, 0x29384A, 0, Fast
+            if ErrorLevel{
+                continue
+            }else{
+                MsgBox, Down?
+            }
+            break
+        }
+
+        ; 2 jumps down
+        if (jumpNum = 1 || jumpNum = 2){
+            Random, x, 870-30, 870+30
+            Random, y, 614-30, 614+30
+
+            MouseMove, x, y, 2
+            MouseClick, Left
+            jumpNum++
+        }else{ ; 1 jump left
+            Random, x, 541-30, 541+30
+            Random, y, 399-30, 399+30
+
+            MouseMove, x, y, 2
+            MouseClick, Left
+            jumpNum := 1
+        }
+        randomSleepRange(300,400)
+    }
+
 return
 
 f7::
-    restartSell:
+    ;second level
+    jumpNum := 1
+    Loop{
+        textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 2\nHopping to Ladder\nJump #" . jumpNum)
+        ; TODO uncomment
+        ; if (isDeadNow()){
+        ;     resetIfDead()
+        ;     return
+        ; }
 
-    SetKeyDelay 10,20
-    loop,10{
-        ; Find the pharm
-        PixelSearch, px, py, 405, 37, 1424, 724, 0x0000CE, 0, Fast
-        if ErrorLevel{ ; IF not found
+        ; TODO uncomment
+        ;checkIfDCMidAction()
+        Send, {CTRL DOWN}
 
-        }else{
-            Mousemove, px-100,py,2
-            randomSleep()
-            MouseClick, Left
-            randomSleepRange(6000,7000)
+        ; TODO uncomment
+        ; if (A_TickCount > StartTime+180000){
+        ;     Goto, endMineRun
+        ; }
 
-            ; Check to see if pharm is opened
-            PixelSearch, , , 613-5, 283-5, 613+5, 283+5, 0x5A4929, 1, Fast
-            if ErrorLevel{ ; IF not found
-                continue
-            }else{
-                break
-            }
-        }
-
-
-        Random, x, 1150, 1200
-        Random, y, 350, 415
-
-        Mousemove, x,y,2
-        Send, {Ctrl Down}
-        MouseClick, Left
-        Send, {Ctrl Up}
-        waitForMomentStop()
+        randomSleepRange(200,300)
         
-
-    }
-
-    ;;;;;;;;;;;;;;;
-    ; Check to see if pharm is opened
-    PixelSearch, , , 613-5, 283-5, 613+5, 283+5, 0x5A4929, 1, Fast
-    if ErrorLevel{ ; IF not found
-        MsgBox, Pharm not opened! Walk to the spot and open the pharm!
-    }
-
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; SELL LOOP HERE
-
-    ; buy scroll
-    MouseMove, 442, 242, 2
-    randomSleep()
-    MouseClick, right
-    randomSleep()
-
-    ; Close inventory/Store
-    MouseMove, 634, 331, 2
-    randomSleep()
-    MouseClick, left
-    randomSleepRange(1000,1200)
-
-    randomSleepRange(1000,2000)
-    findWHCount := 0
-    loop{
-        ; if unable to find the WH guy, restart
-        if (findWHCount > 15){
-            useScroll()
-            Goto, restartSell
-        }
-
-        ;check if any npc clicked by accident
-        PixelSearch, , , 1180-1, 54-1, 1180+1, 54+1, 0x84C7D6, 0, Fast
+        ; Check to make sure we didn't go down a ladder by accient
+        PixelSearch, , , 840, 460, 850, 470, 0x5D6276, 0, Fast
         if ErrorLevel{ ; IF not found
-            ; nothing
         }else{
-            Mousemove, 1160,51,2
-            randomSleep()
-            MouseClick, Left
+            randomSleepRange(1000,1300)
+            break
         }
 
-
-        ; Hop towards the WH
-        PixelSearch, Px, Py, 405, 37, 1424, 724, 0x392010, 0, Fast
+        ; look for ladder
+        PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
         if ErrorLevel{ ; IF not found
 
         }else{
-            Mousemove, px,py,2
+            textGui("Mine lvl 2\nLadder Found!")
+            randomSleepRange(1000,1300)
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{
+                continue
+            }
+            Send, {Ctrl Up}
+            MouseMove, Px, Py, 2
             randomSleep()
             MouseClick, Left
-            randomSleepRange(7000,8000)
+            Send, {CTRL DOWN}
 
-            ;Check to see if WH is opened
-            PixelSearch, , , 1255-1, 429-1, 1255+1, 429+1, 0x635131, 0, Fast
-            if ErrorLevel{ ; IF not found
+            waitForMomentStop()
+            ;check to make sure we went through
+            
+            PixelSearch, Px, Py, 578-1, 222-1, 578+1, 222+1, 0x182839, 0, Fast
+            if ErrorLevel{
                 continue
             }else{
-                break
+                MsgBox, Down?
             }
+            break
         }
 
-        Random, x, 483, 540
-        Random, y, 198, 250
+        ; 2 jumps right
+        if (jumpNum = 1 || jumpNum = 2){
+            Random, x, 1096-30, 1096+30
+            Random, y, 684-30, 684+30
 
-        Mousemove, x,y,2
-        Send, {Ctrl Down}
-        MouseClick, Left
-        Send, {Ctrl Up}
-        waitForMomentStop()
-
-        findWHCount++
-    }
-
-    randomSleepRange(1000,1200)
-
-    SetKeyDelay 300,500
-    ; DO WH STUFF
-    ;FIXME uncomment wharehouse()
-    SetKeyDelay 10,20
-    randomSleepRange(1000,1200)
-
-    ; Close WH
-    Mousemove, 587,459,2
-    randomSleep()
-    MouseClick, left
-    randomSleepRange(1000,1200)
-
-    searchAttempts := 0
-    loop{
-        ;check if any npc clicked by accident
-        PixelSearch, , , 1180-1, 54-1, 1180+1, 54+1, 0x84C7D6, 0, Fast
-        if ErrorLevel{ ; IF not found
-            ; nothing
-        }else{
-            Mousemove, 1160,51,2
-            randomSleep()
+            MouseMove, x, y, 2
             MouseClick, Left
-        }
+            jumpNum++
+        }else{ ; 1 jump left
+            Random, x, 745-30, 745+30
+            Random, y, 621-30, 621+30
 
-        ; Talk to conductress
-        PixelSearch, Px, Py, 405, 37, 1424, 724, 0x6F8EFF, 1, Fast
-        if ErrorLevel{ ; IF not found
-            if (searchAttempts > 30){
-                ; Hop towards the WH
-                PixelSearch, Px, Py, 405, 37, 1424, 724, 0x392010, 0, Fast
-                if ErrorLevel{ ; IF not found
-                    useScroll()
-                    Goto, restartSell
-                }else{
-                    Mousemove, Px, Py+200,2
-                    randomSleep()
-                    MouseClick, Left
-                    randomSleepRange(1000,2000)
-                }
-
-                randomSleepRange(3000,5000)
-            }
-        }else{
-            Mousemove, Px, Py,2
-            randomSleep()
+            MouseMove, x, y, 2
             MouseClick, Left
-            randomSleepRange(1000,2000)
-
-            ; Check if open
-            PixelSearch, , , 709, 93, 711, 95, 0xE7BAE7, 0, Fast
-            if ErrorLevel{ ; IF not found
-                
-            }else{
-                break
-            }
+            jumpNum := 1
         }
-        searchAttempts++
+        randomSleepRange(300,400)
     }
-
-    randomSleepRange(1000,1200)
-
-    ; teleport to MC
-    Mousemove, 958,140, 2
-    randomSleep()
-    MouseClick, left
-    randomSleep()
-
-    ;;;;;;;;;;;;;;;;;
-
-    useScroll()
-    Goto, restartSell
-
 return
 
 r::
@@ -258,35 +215,6 @@ waitForMomentStop(){
     }
 }
 
-useScroll(){
-    global topX
-    global topY
-    global botX
-    global botY
-
-    ; check if inventory is open
-    PixelSearch, , , 1255-1, 429-1, 1255+1, 429+1, 0x635131, 0, Fast
-    if ErrorLevel{ ; IF not found
-        ; Open Inventory
-        MouseMove, 970, 762, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleep()
-        randomSleepRange(1000,2000)
-    }
-
-    ; find the scroll
-    PixelSearch, px, py, topX, topY, botX, botY, 0x3CBEEF, 0, Fast
-    if ErrorLevel{ ; IF not found
-        MsgBox, No scroll found!
-    }else{
-        MouseMove, px, py, 2
-        randomSleep()
-        MouseClick, right
-        randomSleep()
-        randomSleepRange(3000,4000)
-    }
-}
 
 
 randomSleep(){
@@ -298,14 +226,3 @@ randomSleepRange(min,max){
     Random, x, min, max
     Sleep, x
 }
-
-getXY(){
-    coords := StrSplit(StrReplace(StrReplace(StrReplace(OCR([517, 36, 65, 18]),"(",""),"{",""),")",""),",")
-    ; x := coords[1]
-    ; y := coords[1]
-    
-    
-
-    return coords
-}
-

@@ -1,5 +1,6 @@
 #Include drawBox.ahk
 #include .\lib\Vis2.ahk
+#Include textOnScreen.ahk
 
 CoordMode, Mouse, Screen
 CoordMode, Pixel, Screen
@@ -63,15 +64,33 @@ randomSleepRange(2000,3000)
 attempts := 0
 account := 1
 isPause := false
-switchAccount()
 rotationStartTime := A_TickCount
 Random, rotationInterval, 115, 165
-Loop{
 
+account1Gold := 0
+account2Gold := 0
+account3Gold := 0
+account4Gold := 0
+account5Gold := 0
+account6Gold := 0
+account7Gold := 0
+account8Gold := 0
+account9Gold := 0
+account10Gold := 0
+account11Gold := 0
+
+nextResetGui("" . Ceil((rotationStartTime+(1000*60*rotationInterval)-A_TickCount)/1000/60) . " minutes Left")
+textGui("Switching to first account")
+switchAccount()
+Loop{
+    textGui("Looking for Ore\nAttempt:" . attempts . "/9")
+    nextResetGui("" . Ceil((rotationStartTime+(1000*60*rotationInterval)-A_TickCount)/1000/60) . " minutes Left")
     if (A_TickCount > rotationStartTime+(1000*60*rotationInterval)){
+        rotationStartTime := A_TickCount
         isPause := true
         account := 1
         loop, 11{
+
             switchAccount()
             randomSleepRange(1000,2000)
             DCbankFromScroll()
@@ -85,6 +104,7 @@ Loop{
     }
 
     if (attempts > 9){
+        textGui("9 Attempts done, switching")
         randomSleepRange(200,300)
         switchAccount()
         randomSleep()
@@ -262,6 +282,7 @@ switchAccount(){
     accountX := [538,641,752,861,960,1065,1166,1274,1373,1479,1588]
 
     loop{
+        textGui("Looking for DC window")
         if (WinExist("Tip")){
             randomSleep()
             WinActivate, Tip
@@ -276,22 +297,29 @@ switchAccount(){
     }
 
     randomSleepRange(5000,6000)
+    textGui("Switching Windows")
     
     MouseMove, accountX[account], 855, 2
     randomSleep()
     MouseClick, Left
     randomSleep()
+    textGui("Checking if DC'd")
+    checkIfDCWhileMining()
+    textGui("Checking if Popup Open")
+    checkIfPopupOpen()
+    textGui("Checking if Settings Wrong")
+    checkIfSettingsWrong()
+    textGui("Checking if Inventory NOT opened")
+    checkIfInventoryNotOpen()
+    textGui("Checking if Dead")
+    resetIfDead()
+
     account++
 
     if (account = 12){
         account := 1
     }
     
-    checkIfDCWhileMining()
-    checkIfPopupOpen()
-    checkIfSettingsWrong()
-    checkIfInventoryNotOpen()
-    resetIfDead()
 }
 
 getInventoryGold(){
@@ -299,20 +327,34 @@ getInventoryGold(){
 }
 
 getBankGold(){
-    return StrReplace(OCR([529,220, 609-529, 234-220]),",","")
+    return StrReplace(StrReplace(OCR([529,220, 609-529, 234-220]),",","")," ","")
+}
+
+updateGoldGui(){
+    totalCoins := 0
+
+    totalMoneyGui("" . CommaAdd(totalCoins) . " coins")
+}
+
+; Formats a number nicely
+CommaAdd(num) {
+    VarSetCapacity(fNum,32)
+    DllCall("GetNumberFormat",UInt,0x0409,UInt,0,Str,Num,UInt,0,Str,fNum,Int,32)
+    return SubStr(fNum,1,StrLen(fNum) - 3)
 }
 
 wharehouse(){
-    global topX 
-    global topY 
-    global botX 
-    global botY 
+    global
 
+    textGui("WH Open")
+
+    textGui("WH Open\nEmptying Gold")
     ;Select text area
     MouseMove, 543, 194, 2
     randomSleep()
     MouseClick, left
-
+    randomSleep()
+    MouseClick, left
     ; Write in amount of gold
     Send % getInventoryGold() - 5000
     randomSleep()
@@ -323,8 +365,10 @@ wharehouse(){
     MouseClick, left
     randomSleep()
 
+
     ; Bank Gem Loop
     loop{
+        textGui("WH Open\nEmptying Gems")
         if (checkIfDCMidAction()){
             break
         }
@@ -354,6 +398,18 @@ wharehouse(){
         randomSleepRange(300,500)
     }
 
+    
+    ; Check account's Gold
+    ; MsgBox % account
+    ; MsgBox % gold[account]
+    ; currentGold := getBankGold()
+    ; gold[account] := currentGold
+    ; MsgBox % gold[(account)]
+
+    ; Can't get f***ing arrays to work
+    
+
+    ; updateGoldGui()
 }
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -376,7 +432,12 @@ toTheMine(){
     ; TODO
     ; Add if it takes more than 3 minutes, just start mining
 
+    textGui("To the Mine\nStarting DH")
+
+
+    MouseClick, right
     Send, {f10}
+    MouseClick, right
 
     randomSleep()
     MouseMove, 1372, 421, 2
@@ -389,6 +450,10 @@ toTheMine(){
     Send, {CTRL DOWN}
     SetKeyDelay 10,20
     loop,25{
+        Send, {f10}
+        MouseClick, right
+
+        textGui("To the Mine\nHopping without checks")
         Send, {CTRL DOWN}
         ; Hop Again
         Random, x, 1250, 1350
@@ -409,6 +474,7 @@ toTheMine(){
     clickAttempts := 0
     ; Hop to mine dude
     loop{
+        textGui("To the Mine\nLooking for Mine Guy")
         jumps++
         if (jump > 10){
             checkIfDCMidAction()
@@ -456,6 +522,7 @@ toTheMine(){
         ;if unable to open the miner box
         if (clickAttempts > 6){
             loop,4{
+                textGui("To the Mine\nBacking away from mine")
                 MouseMove, 515,343, 2
                 randomSleepRange(300,500)
                 MouseClick, left
@@ -469,6 +536,7 @@ toTheMine(){
         if ErrorLevel{ ; IF not found
 
         }else{
+            textGui("To the Mine\nEntering Mine")
             MouseMove, 726,147, 2
             randomSleep()
             MouseClick, left
@@ -479,11 +547,13 @@ toTheMine(){
         }
     }
     
-
     Send, {Ctrl Up}
     MouseMove, 1382, 664, 2
     ; Scan for the "end DH" thing
+    Send, {F1}
     Loop,40{
+        Send, {F1}
+        textGui("Mine lvl 1\nScanning for DH End\n" . A_Index . "/40")
         checkIfDCMidAction()
 
         PixelSearch, , , 1372,654, 1392,674, 0x4D3921, 0, Fast
@@ -498,7 +568,8 @@ toTheMine(){
             break
         }
     }
-
+    textGui("Mine lvl 1\nSitting for Stam")
+    MouseClick, right
     ; Sit
     Send, {F1}
     Send, {F1}
@@ -514,7 +585,7 @@ toTheMine(){
     StartTime := A_TickCount
 
     startRun:
-
+    textGui("Mine lvl 1\nHopping to Ladder")
     MouseMove, 884, 684, 1
     MouseClick, left
     randomSleep()
@@ -526,6 +597,7 @@ toTheMine(){
     ;first level
     jumpNum := 1
     Loop{
+        textGui("Mine lvl 1\nHopping to Ladder\nJump #" . jumpNum)
         if (isDeadNow()){
             resetIfDead()
             return
@@ -555,6 +627,7 @@ toTheMine(){
         if ErrorLevel{ ; IF not found
 
         }else{
+            textGui("Mine lvl 1\nLadder Found!")
             randomSleepRange(1000,1300)
             PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
             if ErrorLevel{
@@ -602,6 +675,8 @@ toTheMine(){
         }
     
     }
+
+    textGui("Mine lvl 2\nMoving from Crystals")
     randomSleepRange(500,700)
 
     ; Hop to allow the crystal check
@@ -616,7 +691,7 @@ toTheMine(){
 
     ;2nd level
     Loop{
-
+        textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 2\nHopping to Ladder\nJump #" . jumpNum)
         if (isDeadNow()){
             resetIfDead()
             return
@@ -641,6 +716,7 @@ toTheMine(){
         if ErrorLevel{ ; IF not found
             
         }else{
+            textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 2\nLadder Found")
             randomSleepRange(1000,1300)
             PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
             if ErrorLevel{
@@ -707,6 +783,7 @@ toTheMine(){
         randomSleepRange(300,400)
     }
 
+    textGui("Mine lvl 3\nMoving from Crystals")
     ; Hop to allow the crystal check
     Send, {Ctrl Up}
     MouseMove, 1024, 579, 2
@@ -717,9 +794,9 @@ toTheMine(){
     MouseClick, Left
     Send, {CTRL DOWN}
 
-    ;NOTE trying to go down to 4th level now
     ;3nd level
     Loop{
+        textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 3\nHopping to Ladder\nJump #" . jumpNum)
         if (isDeadNow()){
             resetIfDead()
             return
@@ -743,6 +820,7 @@ toTheMine(){
         if ErrorLevel{ ; IF not found
             
         }else{
+            textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 3\nLadder Found")
             randomSleepRange(1000,1300)
             PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
             if ErrorLevel{
@@ -805,12 +883,14 @@ toTheMine(){
     global dropY
     Send, {CTRL UP}
 
-
+    textGui("Mine lvl 4\nScattering Miner")
     scatterMiner()
+    textGui("Mine lvl 4\nMoving away from other miners")
     moveAwayFromMiners()
+    textGui("Mine lvl 4\nPreparing Miner")
     prepareMiner()
     
-
+    textGui("Mine lvl 4\nRight Clicking to mine")
     randomSleep()
     MouseMove, dropX, dropY
     randomSleep()
@@ -1155,6 +1235,7 @@ checkIfInventoryNotOpen(){
 
 resetIfDead(){
     if (isDeadNow()){
+        textGui("IS DEAD!","FF0000")
         ; Make sure we can rev
         randomSleepRange(23000,25000)
         if (!isDeadNow()){
@@ -1166,7 +1247,7 @@ resetIfDead(){
         randomSleep()
         MouseClick, left
         randomSleep()
-
+        textGui("Reviving")
         randomSleepRange(1000,2000)
         DCbankFromScroll(true)
     }
@@ -1256,13 +1337,19 @@ DCbankFromScroll(isFromDead:=false){
     global topY
     global botX
     global botY
+
+    textGui("Checking if in DC already")
     ; Check to see if in DC already
     PixelSearch, , , 608-1, 483-1, 608+1, 483+1, 0x60B28F, 1, Fast
     if ErrorLevel{ ; IF not found
         if (not isFromDead){
-            useScroll()
+            textGui("Using scroll")
+            if (useScroll() = "error"){
+                return
+            }
         }
     }else{
+        textGui("Closing Inventory")
         ; Close Inventory
         MouseMove, 970, 762, 2
         randomSleep()
@@ -1288,6 +1375,7 @@ DCbankFromScroll(isFromDead:=false){
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; Hop to the Pharm
+    textGui("Hopping to Pharm")
     SetKeyDelay 10,20
     loop,10{
 
@@ -1295,17 +1383,19 @@ DCbankFromScroll(isFromDead:=false){
             resetIfDead()
             return
         }
-
+        textGui("Hopping to Pharm\nLooking for Pharm")
         ; Find the pharm
         PixelSearch, px, py, 405, 37, 1424, 724, 0x0000CE, 0, Fast
         if ErrorLevel{ ; IF not found
 
         }else{
+            textGui("Hopping to Pharm\nPharm Found")
             Mousemove, px-100,py,2
             randomSleep()
             MouseClick, Left
             randomSleepRange(6000,7000)
 
+            textGui("Hopping to Pharm\nChecking Pharm is Open")
             ; Check to see if pharm is opened
             PixelSearch, , , 613-5, 283-5, 613+5, 283+5, 0x5A4929, 1, Fast
             if ErrorLevel{ ; IF not found
@@ -1314,7 +1404,7 @@ DCbankFromScroll(isFromDead:=false){
                 break
             }
         }
-
+        textGui("Hopping to Pharm\nMoving to Pharm")
 
         Random, x, 1150, 1200
         Random, y, 350, 415
@@ -1328,15 +1418,19 @@ DCbankFromScroll(isFromDead:=false){
 
     }
 
+    textGui("Double checking pharm is open")
     ;;;;;;;;;;;;;;;
     ; Check to see if pharm is opened
     PixelSearch, , , 613-5, 283-5, 613+5, 283+5, 0x5A4929, 1, Fast
     if ErrorLevel{ ; IF not found
-        MsgBox, Pharm not opened! Walk to the spot and open the pharm!
+        textGui("unable to find pharm!", "FF0000")
+        randomSleepRange(10000,13000)
+        return
     }
     
     ; sell loop
     loop{
+        textGui("Selling Ore\nOre #" . A_Index)
         if (isDeadNow()){
             resetIfDead()
             return
@@ -1397,6 +1491,7 @@ DCbankFromScroll(isFromDead:=false){
         randomSleep()
     }
 
+    textGui("Closing Pharm")
     ; Close inventory/Store
     MouseMove, 634, 331, 2
     randomSleep()
@@ -1406,6 +1501,7 @@ DCbankFromScroll(isFromDead:=false){
     randomSleepRange(1000,2000)
     findWHCount := 0
     loop{
+        textGui("Looking for WH\nAttempts:" . findWHCount . "/15")
         if (isDeadNow()){
             resetIfDead()
             return
@@ -1413,7 +1509,9 @@ DCbankFromScroll(isFromDead:=false){
 
         ; if unable to find the WH guy, restart
         if (findWHCount > 15){
-            useScroll()
+            if (useScroll() = "error"){
+                return
+            }
             Goto, restartSell
         }
 
@@ -1433,6 +1531,7 @@ DCbankFromScroll(isFromDead:=false){
         if ErrorLevel{ ; IF not found
 
         }else{
+            textGui("Opening WH")
             Mousemove, px,py,2
             randomSleep()
             MouseClick, Left
@@ -1446,7 +1545,7 @@ DCbankFromScroll(isFromDead:=false){
                 break
             }
         }
-
+        textGui("Looking for WH\nAttempts:" . findWHCount . "/15\nMoving Closer")
         Random, x, 483, 540
         Random, y, 198, 250
 
@@ -1460,13 +1559,15 @@ DCbankFromScroll(isFromDead:=false){
     }
 
     randomSleepRange(1000,1200)
-
+    textGui("WH Open")
     SetKeyDelay 300,500
     ; DO WH STUFF
     wharehouse()
     SetKeyDelay 10,20
     randomSleepRange(1000,1200)
 
+    
+    textGui("Closing WH")
     ; Close WH
     Mousemove, 587,459,2
     randomSleep()
@@ -1475,6 +1576,7 @@ DCbankFromScroll(isFromDead:=false){
 
     searchAttempts := 0
     loop{
+        textGui("Looking for Conductress\nAttempt:" . searchAttempts . "/30")
         if (isDeadNow()){
             resetIfDead()
             return
@@ -1497,7 +1599,9 @@ DCbankFromScroll(isFromDead:=false){
                 ; Hop towards the WH
                 PixelSearch, Px, Py, 405, 37, 1424, 724, 0x392010, 0, Fast
                 if ErrorLevel{ ; IF not found
-                    useScroll()
+                    if (useScroll() = "error"){
+                        return
+                    }
                     Goto, restartSell
                 }else{
                     Mousemove, Px, Py+200,2
@@ -1526,7 +1630,7 @@ DCbankFromScroll(isFromDead:=false){
     }
 
     randomSleepRange(1000,1200)
-
+    textGui("Teleporting to MC")
     ; teleport to MC
     Mousemove, 958,140, 2
     randomSleep()
@@ -1582,7 +1686,7 @@ useScroll(){
     ; find the scroll
     PixelSearch, px, py, topX, topY, botX, botY, 0x3CBEEF, 0, Fast
     if ErrorLevel{ ; IF not found
-        MsgBox, No scroll found!
+        return "error"
     }else{
         MouseMove, px, py, 2
         randomSleep()
@@ -1591,6 +1695,7 @@ useScroll(){
         randomSleepRange(3000,4000)
     }
 }
+
 
 ;070B0F Mine DUDE
 ;405, 39 CLIENT TOP LEFT
