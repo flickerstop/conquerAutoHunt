@@ -246,11 +246,6 @@ f5::
     tradeOverGoldAndGems()
 return
 
-f8::
-    resetFromDead()
-    Pause,Toggle
-return
-
 randomSleep(){
     Random, x, 300, 500
     Sleep, x
@@ -296,7 +291,7 @@ switchAccount(){
     checkIfPopupOpen()
     checkIfSettingsWrong()
     checkIfInventoryNotOpen()
-    checkIfDead()
+    resetIfDead()
 }
 
 getInventoryGold(){
@@ -419,24 +414,16 @@ toTheMine(){
             checkIfDCMidAction()
             jumps := 0
 
-            PixelSearch, , , 434-1, 777-1, 434+1, 777+1, 0x887F74, 0, Fast
-            if ErrorLevel{ ; IF not found
-                
-            }else{
-                PixelSearch, , , 1340-1, 654-1, 1340+1, 654+1, 0x94BED6, 0, Fast
-                if ErrorLevel{ ; IF not found
-                    
-                }else{
-                    ; Revive
-                    Mousemove, 1348,656,2
-                    randomSleep()
-                    MouseClick, left
-                    randomSleep()
+            if (isDeadNow()){
+                ; Revive
+                Mousemove, 1348,656,2
+                randomSleep()
+                MouseClick, left
+                randomSleep()
 
-                    randomSleepRange(4000,6000)
-                    DCbankFromScroll()
-                    return
-                }
+                randomSleepRange(4000,6000)
+                DCbankFromScroll()
+                return
             }
         }
         ; Check coords are close to the miner
@@ -519,6 +506,11 @@ toTheMine(){
     Send, {F1}
     randomSleepRange(17000,19000) ;Wait for stam
 
+    if (isDeadNow()){
+        resetIfDead()
+        return
+    }
+
     StartTime := A_TickCount
 
     startRun:
@@ -534,6 +526,11 @@ toTheMine(){
     ;first level
     jumpNum := 1
     Loop{
+        if (isDeadNow()){
+            resetIfDead()
+            return
+        }
+
         MouseClick, right
 
         checkIfDCMidAction()
@@ -619,6 +616,12 @@ toTheMine(){
 
     ;2nd level
     Loop{
+
+        if (isDeadNow()){
+            resetIfDead()
+            return
+        }
+
         Send, {CTRL DOWN}
 
         if (A_TickCount > StartTime+180000){
@@ -717,6 +720,11 @@ toTheMine(){
     ;NOTE trying to go down to 4th level now
     ;3nd level
     Loop{
+        if (isDeadNow()){
+            resetIfDead()
+            return
+        }
+
         Send, {CTRL DOWN}
         if (A_TickCount > StartTime+180000){
             Goto, endMineRun
@@ -1145,96 +1153,37 @@ checkIfInventoryNotOpen(){
     }
 }
 
-checkIfDead(){
-    ; Check HP
-    PixelSearch, , , 434-1, 777-1, 434+1, 777+1, 0x887F74, 0, Fast
-    if ErrorLevel{ ; IF not found
-        return
-    }else{
-        PixelSearch, , , 1340-1, 654-1, 1340+1, 654+1, 0x94BED6, 0, Fast
-        if ErrorLevel{ ; IF not found
+resetIfDead(){
+    if (isDeadNow()){
+        ; Make sure we can rev
+        randomSleepRange(23000,25000)
+        if (!isDeadNow()){
+            ; someone rev'd me
             return
-        }else{
-            ; Make sure we can rev
-            randomSleepRange(23000,25000)
-
-            ; check if still dead
-            PixelSearch, , , 434-1, 777-1, 434+1, 777+1, 0x887F74, 0, Fast
-            if ErrorLevel{ ; IF not found
-                return
-            }
-
-            ; Revive
-            Mousemove, 1348,656,2
-            randomSleep()
-            MouseClick, left
-            randomSleep()
-
-            randomSleepRange(1000,2000)
-            DCbankFromScroll(true)
         }
+        ; Revive
+        Mousemove, 1348,656,2
+        randomSleep()
+        MouseClick, left
+        randomSleep()
+
+        randomSleepRange(1000,2000)
+        DCbankFromScroll(true)
     }
 }
 
-resetFromDead(){
-    account := 1
-    accountX := [538,641,752,861,960,1065,1166,1274,1373,1479,1588]
-    loop{
-        randomSleepRange(1000,2000)
-        
-        MouseMove, accountX[account], 855, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleep()
-
-        ; Check for REV button
+isDeadNow(){
+    PixelSearch, , , 434-1, 777-1, 434+1, 777+1, 0x887F74, 0, Fast
+    if ErrorLevel{ ; IF not found
+        return false
+    }else{
         PixelSearch, , , 1340-1, 654-1, 1340+1, 654+1, 0x94BED6, 0, Fast
         if ErrorLevel{ ; IF not found
-            account++
-            if (account = 12){
-                MsgBox, All Miners rev'd
-            }
-            continue
-        }
-
-        ; Click rev button
-        MouseMove, 1357,657, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleepRange(3000,5000)
-
-        ; open inventory
-        MouseMove, 970, 762, 2
-        randomSleep()
-        MouseClick, Left
-        randomSleep()
-        randomSleepRange(1000,2000)
-
-        ; Check if player has both teleport scrolls
-        PixelSearch, , , 1213-1, 91-1, 1213+1, 91+1, 0x63AEDE, 0, Fast
-        if ErrorLevel{ ; IF not found
-            
+            return false
         }else{
-            PixelSearch, , , 1253-1, 91-1, 1253+1, 91+1, 0x29AED6, 0, Fast
-            if ErrorLevel{ ; IF not found
-                
-            }else{
-                ; Both Scrolls Found teleport to AC
-                MouseMove, 1213, 91, 2
-                randomSleep()
-                MouseClick, Right
-                randomSleep()
-            }
-        }
-
-
-
-        account++
-        if (account = 12){
-            MsgBox, All Miners rev'd
+            return true
         }
     }
-
 }
 
 tradeOverGoldAndGems(){
@@ -1341,6 +1290,12 @@ DCbankFromScroll(isFromDead:=false){
     ;; Hop to the Pharm
     SetKeyDelay 10,20
     loop,10{
+
+        if (isDeadNow()){
+            resetIfDead()
+            return
+        }
+
         ; Find the pharm
         PixelSearch, px, py, 405, 37, 1424, 724, 0x0000CE, 0, Fast
         if ErrorLevel{ ; IF not found
@@ -1382,6 +1337,11 @@ DCbankFromScroll(isFromDead:=false){
     
     ; sell loop
     loop{
+        if (isDeadNow()){
+            resetIfDead()
+            return
+        }
+
         randomSleep()
         PixelSearch, Px, Py, topX, topY, botX, botY, 0x4F88B8, 1, Fast ; GOLD
         if ErrorLevel{ ; IF not found
@@ -1437,12 +1397,6 @@ DCbankFromScroll(isFromDead:=false){
         randomSleep()
     }
 
-    ; buy scroll
-    MouseMove, 442, 242, 2
-    randomSleep()
-    MouseClick, right
-    randomSleep()
-
     ; Close inventory/Store
     MouseMove, 634, 331, 2
     randomSleep()
@@ -1452,6 +1406,11 @@ DCbankFromScroll(isFromDead:=false){
     randomSleepRange(1000,2000)
     findWHCount := 0
     loop{
+        if (isDeadNow()){
+            resetIfDead()
+            return
+        }
+
         ; if unable to find the WH guy, restart
         if (findWHCount > 15){
             useScroll()
@@ -1516,6 +1475,11 @@ DCbankFromScroll(isFromDead:=false){
 
     searchAttempts := 0
     loop{
+        if (isDeadNow()){
+            resetIfDead()
+            return
+        }
+
         ;check if any npc clicked by accident
         PixelSearch, , , 1180-1, 54-1, 1180+1, 54+1, 0x84C7D6, 0, Fast
         if ErrorLevel{ ; IF not found
