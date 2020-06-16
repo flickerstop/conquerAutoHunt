@@ -21,3 +21,14 @@ return
         isCtrlDown := true
     }
 return
+
+^\::
+    Pause,Toggle
+    if (isCtrlDown){
+        Send, {CTRL UP}
+        isCtrlDown := false
+    }else{
+        Send, {CTRL DOWN}
+        isCtrlDown := true
+    }
+return

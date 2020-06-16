@@ -67,22 +67,19 @@ isPause := false
 rotationStartTime := A_TickCount
 Random, rotationInterval, 115, 165
 
-account1Gold := 0
-account2Gold := 0
-account3Gold := 0
-account4Gold := 0
-account5Gold := 0
-account6Gold := 0
-account7Gold := 0
-account8Gold := 0
-account9Gold := 0
-account10Gold := 0
-account11Gold := 0
-
 nextResetGui("" . Ceil((rotationStartTime+(1000*60*rotationInterval)-A_TickCount)/1000/60) . " minutes Left")
 textGui("Switching to first account")
 switchAccount()
 Loop{
+
+    
+    ; Checking if player has rev'd from being dead
+    PixelSearch, , , 596-1, 153-1, 596+1, 153+1, 0x4A9673, 0, Fast
+    if ErrorLevel{ ; IF not found
+    }else{
+        DCbankFromScroll(true)
+    }
+
     textGui("Looking for Ore\nAttempt:" . attempts . "/9")
     nextResetGui("" . Ceil((rotationStartTime+(1000*60*rotationInterval)-A_TickCount)/1000/60) . " minutes Left")
     if (A_TickCount > rotationStartTime+(1000*60*rotationInterval)){
@@ -210,7 +207,7 @@ return
 
 ; Just sell and sit at the bank
 g::
-    ;TODO remake this but better
+    prepareTrading()
 return
 
 
@@ -296,7 +293,7 @@ switchAccount(){
         }
     }
 
-    randomSleepRange(5000,6000)
+    randomSleepRange(500,1000)
     textGui("Switching Windows")
     
     MouseMove, accountX[account], 855, 2
@@ -311,7 +308,27 @@ switchAccount(){
     checkIfSettingsWrong()
     textGui("Checking if Inventory NOT opened")
     checkIfInventoryNotOpen()
+
     textGui("Checking if Dead")
+    ; If it's dead now, try to revive all the other ones!
+    if (isDeadNow()){
+        loop, 11{
+            MouseMove, accountX[A_Index], 855, 2
+            MouseClick, Left
+            if (isDeadNow()){
+                ; Revive
+                Mousemove, 1348,656,2
+                randomSleep()
+                MouseClick, left
+                randomSleep()
+            }
+        }
+        ; Go back to the current account
+        MouseMove, accountX[account], 855, 2
+        randomSleep()
+        MouseClick, Left
+        randomSleep()
+    }
     resetIfDead()
 
     account++
@@ -428,10 +445,6 @@ checkHoldingOre(oreColour){
 }
 
 toTheMine(){
-
-    ; TODO
-    ; Add if it takes more than 3 minutes, just start mining
-
     textGui("To the Mine\nStarting DH")
 
 
@@ -567,14 +580,21 @@ toTheMine(){
             randomSleep()
             break
         }
+
+        ; Look to see if we're gaining stam
+        PixelSearch, , , 448-1,785-1, 448+1,785+1, 0x978728, 0, Fast
+        if ErrorLevel{ ; IF not found
+        }else{
+            break
+        }
+
     }
-    textGui("Mine lvl 1\nSitting for Stam")
-    MouseClick, right
     ; Sit
     Send, {F1}
     Send, {F1}
     Send, {F1}
     Send, {F1}
+    textGui("Mine lvl 1\nSitting for Stam")
     randomSleepRange(17000,19000) ;Wait for stam
 
     if (isDeadNow()){
@@ -585,297 +605,596 @@ toTheMine(){
     StartTime := A_TickCount
 
     startRun:
-    textGui("Mine lvl 1\nHopping to Ladder")
-    MouseMove, 884, 684, 1
-    MouseClick, left
-    randomSleep()
-    MouseClick, right
-    randomSleep()
-    MouseClick, left
-
-    Send, {CTRL DOWN}
-    ;first level
-    jumpNum := 1
-    Loop{
-        textGui("Mine lvl 1\nHopping to Ladder\nJump #" . jumpNum)
-        if (isDeadNow()){
-            resetIfDead()
-            return
-        }
-
+    Random, isGoingLeft, 0, 1
+    if (isGoingLeft == 1){
+        textGui("Mine lvl 1\nHopping to Ladder")
+        MouseMove, 884, 684, 1
+        MouseClick, left
+        randomSleep()
         MouseClick, right
+        randomSleep()
+        MouseClick, left
 
-        checkIfDCMidAction()
         Send, {CTRL DOWN}
+        ;first level
+        jumpNum := 1
+        ladderClicks := 0
+        Loop{
+            textGui("Mine lvl 1\nHopping to Ladder\nJump #" . jumpNum)
+            if (isDeadNow()){
+                resetIfDead()
+                return
+            }
 
-        if (A_TickCount > StartTime+180000){
-            Goto, endMineRun
+            MouseClick, right
+
+            checkIfDCMidAction()
+            Send, {CTRL DOWN}
+
+            if (A_TickCount > StartTime+180000){
+                Goto, endMineRun
+            }
+
+            ; look for ladder
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{ ; IF not found
+
+            }else{
+                textGui("Mine lvl 1\nLadder Found!")
+                randomSleepRange(1000,1300)
+                PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+                if ErrorLevel{
+                    continue
+                }
+                Send, {Ctrl Up}
+                MouseMove, Px, Py, 2
+                MouseClick, Left
+                Send, {CTRL DOWN}
+                ladderClicks++
+
+                waitForMomentStop()
+
+
+                if (ladderClicks > 5){
+                    MouseMove, Px+200, Py-200, 2
+                    Send, {Ctrl Up}
+                    MouseMove, Px, Py, 2
+                    randomSleep()
+                    MouseClick, Left
+                    Send, {CTRL DOWN}
+                    randomSleepRange(600,1000)
+                    ladderClicks:=0
+                }
+
+                ;check to make sure we went through
+                PixelSearch, Px, Py, 1089-1, 169-1, 1089+1, 169+1, 0x29384A, 0, Fast
+                if ErrorLevel{
+                    continue
+                }else{
+                    
+                }
+                break
+            }
+
+            ; Check if we went down the ladder by accient 
+            PixelSearch, Px, Py, 1089-1, 169-1, 1089+1, 169+1, 0x29384A, 0, Fast
+            if ErrorLevel{
+                
+            }else{
+                break
+            }
+
+            ; 2 jumps down
+            if (jumpNum = 1 || jumpNum = 2){
+                Random, x, 771-30, 771+30
+                Random, y, 680-30, 680+30
+
+                MouseMove, x, y, 2
+                MouseClick, Left
+                jumpNum++
+            }else{ ; 1 jump left
+                Random, x, 541-30, 541+30
+                Random, y, 399-30, 399+30
+
+                MouseMove, x, y, 2
+                MouseClick, Left
+                jumpNum := 1
+            }
+
+            
+            Send,{ctrl up}
+            waitForMomentStop()
+            Send,{ctrl down}
+
+            
         }
 
-        randomSleepRange(200,300)
+        textGui("Mine lvl 2\nLadder")
+        randomSleepRange(500,700)
+
+        ; Hop to allow the crystal check
+        Send, {Ctrl Up}
+        MouseMove, 817, 427, 2
+        MouseClick, right
+        randomSleepRange(50,100)
+        MouseClick, Left
+        randomSleepRange(500,700)
+        MouseClick, Left
+        Send, {CTRL DOWN}
+
+        ;second level
+        jumpNum := 1
+        Loop{
+            textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 2\nHopping to Ladder\nJump #" . jumpNum)
+            if (isDeadNow()){
+                resetIfDead()
+                return
+            }
+
+            checkIfDCMidAction()
+            Send, {CTRL DOWN}
+
+            if (A_TickCount > StartTime+180000){
+                Goto, endMineRun
+            }
+
+            ; look for ladder
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{ ; IF not found
+
+            }else{
+                textGui("Mine lvl 2\nLadder Found!")
+                randomSleepRange(1000,1300)
+                PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+                if ErrorLevel{
+                    continue
+                }
+                Send, {Ctrl Up}
+                MouseMove, Px, Py, 2
+                randomSleep()
+                MouseClick, Left
+                Send, {CTRL DOWN}
+
+                waitForMomentStop()
+
+                ;check to make sure we went through
+                PixelSearch, Px, Py, 578-1, 222-1, 578+1, 222+1, 0x182839, 0, Fast
+                if ErrorLevel{
+                    continue
+                }
+                break
+            }
+
+            ; 2 jumps right
+            if (jumpNum = 1 || jumpNum = 2){
+                Random, x, 1096-30, 1096+30
+                Random, y, 684-30, 684+30
+
+                MouseMove, x, y, 2
+                MouseClick, Left
+                jumpNum++
+            }else{ ; 1 jump left
+                Random, x, 745-30, 745+30
+                Random, y, 621-30, 621+30
+
+                MouseMove, x, y, 2
+                MouseClick, Left
+                jumpNum := 1
+            }
+
+            Send,{ctrl up}
+            MouseClick, left
+            randomSleepRange(50,100)
+            MouseClick, left
+            randomSleepRange(100,200)
+            Send,{ctrl down}
+
+            ; check to see if we went down a ladder by accident
+            PixelSearch, , , 578-1, 222-1, 578+1, 222+1, 0x182839, 0, Fast
+            if ErrorLevel{
+            }else{
+                break
+            }
+
+            ; look for crystals
+            PixelSearch, , , 857-1, 446-1, 857+1, 446+1, 0x212439, 0, Fast
+            if ErrorLevel{
+            }else{
+                break
+            }
+        }
+
+        textGui("Mine lvl 3\nMoving from Crystals")
+        ; Hop to allow the crystal check
+        Send, {Ctrl Up}
+        MouseMove, 1024, 579, 2
+        MouseClick, right
+        randomSleepRange(50,100)
+        MouseClick, Left
+        randomSleepRange(500,700)
+        MouseClick, Left
+        Send, {CTRL DOWN}
+
+        ;3nd level
+        Loop{
+            textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 3\nHopping to Ladder\nJump #" . jumpNum)
+            if (isDeadNow()){
+                resetIfDead()
+                return
+            }
+
+            Send, {CTRL DOWN}
+            if (A_TickCount > StartTime+180000){
+                Goto, endMineRun
+            }
+
+            ; Check to make sure we didn't go down a ladder by accient
+            PixelSearch, , , 842, 463, 844, 465, 0x5D6276, 0, Fast
+            if ErrorLevel{ ; IF not found
+            }else{
+                randomSleepRange(1000,1300)
+                break
+            }
+
+            ; look for ladder
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{ ; IF not found
+                
+            }else{
+                textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 3\nLadder Found")
+                randomSleepRange(1000,1300)
+                PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+                if ErrorLevel{
+                    continue
+                }
+                Send, {Ctrl Up}
+                MouseMove, Px, Py, 2
+                randomSleep()
+                MouseClick, Left
+                Send, {CTRL DOWN}
+
+                randomSleepRange(3000,4000)
+                break
+            }
+            if (jumpNum = 1){
+                Random, x, 1245-30, 1245+30
+                Random, y, 435-30, 435+30
+
+                ; Check if jump is useless due to wall
+                PixelSearch, , , x-1, y-1, x+1, y+1, 0x000000, 1, Fast
+                if ErrorLevel{
+                    
+                }else{
+                    jumpNum++
+                    continue
+                }
+
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
+                MouseClick, Left
+                jumpNum++
+            }else if (jumpNum = 2){
+                Random, x, 1202-30, 1202+30
+                Random, y, 634-30, 634+30
+
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
+                MouseClick, Left
+                jumpNum++
+            }else{ ; 1 jump left
+                ; checkIfMinerTooLow()
+                ; if (checkIfMinerTooLow() = false){
+                    Random, x, 948-30, 948+30
+                    Random, y, 672-30, 672+30
+
+                    MouseMove, x, y, 2
+                    randomSleepRange(50,100)
+                    MouseClick, Left
+                    
+                ;}
+                jumpNum := 1
+            }
+
+            randomSleepRange(300,400)
+        }
+
+
+
+    }else{
+        textGui("Mine lvl 1\nHopping to Ladder")
+        MouseMove, 884, 684, 1
+        MouseClick, left
+        randomSleep()
+        MouseClick, right
+        randomSleep()
+        MouseClick, left
+
+        Send, {CTRL DOWN}
+        ;first level
+        jumpNum := 1
+        Loop{
+            textGui("Mine lvl 1\nHopping to Ladder\nJump #" . jumpNum)
+            if (isDeadNow()){
+                resetIfDead()
+                return
+            }
+
+            MouseClick, right
+
+            checkIfDCMidAction()
+            Send, {CTRL DOWN}
+
+            if (A_TickCount > StartTime+180000){
+                Goto, endMineRun
+            }
+
+            randomSleepRange(200,300)
+            
+            ; Check to make sure we didn't go down a ladder by accient
+            PixelSearch, , , 840, 460, 850, 470, 0x5D6276, 0, Fast
+            if ErrorLevel{ ; IF not found
+            }else{
+                randomSleepRange(1000,1300)
+                break
+            }
+
+            ; look for ladder
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{ ; IF not found
+
+            }else{
+                textGui("Mine lvl 1\nLadder Found!")
+                randomSleepRange(1000,1300)
+                PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+                if ErrorLevel{
+                    continue
+                }
+                Send, {Ctrl Up}
+                MouseMove, Px, Py, 2
+                randomSleep()
+                MouseClick, Left
+                Send, {CTRL DOWN}
+
+                randomSleepRange(3000,4000)
+                ;check to make sure we went through
+                PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+                if ErrorLevel{
+                    continue
+                }else{
+                    MouseMove, 520, 146, 2
+                    randomSleep()
+                    MouseClick, Left
+                    randomSleep()
+                    MouseClick, Left
+                    randomSleep()
+                }
+                break
+            }
+
+            ; 2 jumps right
+            if (jumpNum = 1 || jumpNum = 2){
+                Random, x, 1109-30, 1109+30
+                Random, y, 651-30, 651+30
+
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
+                MouseClick, Left
+                jumpNum++
+            }else{ ; 1 jump left
+                Random, x, 771-30, 771+30
+                Random, y, 643-30, 643+30
+
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
+                MouseClick, Left
+                jumpNum := 1
+            }
         
-        ; Check to make sure we didn't go down a ladder by accient
-        PixelSearch, , , 840, 460, 850, 470, 0x5D6276, 0, Fast
-        if ErrorLevel{ ; IF not found
-        }else{
-            randomSleepRange(1000,1300)
-            break
         }
 
-        ; look for ladder
-        PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
-        if ErrorLevel{ ; IF not found
+        textGui("Mine lvl 2\nMoving from Crystals")
+        randomSleepRange(500,700)
 
-        }else{
-            textGui("Mine lvl 1\nLadder Found!")
-            randomSleepRange(1000,1300)
-            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
-            if ErrorLevel{
-                continue
-            }
-            Send, {Ctrl Up}
-            MouseMove, Px, Py, 2
-            randomSleep()
-            MouseClick, Left
-            Send, {CTRL DOWN}
-
-            randomSleepRange(3000,4000)
-            ;check to make sure we went through
-            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
-            if ErrorLevel{
-                continue
-            }else{
-                MouseMove, 520, 146, 2
-                randomSleep()
-                MouseClick, Left
-                randomSleep()
-                MouseClick, Left
-                randomSleep()
-            }
-            break
-        }
-
-        ; 2 jumps right
-        if (jumpNum = 1 || jumpNum = 2){
-            Random, x, 1109-30, 1109+30
-            Random, y, 651-30, 651+30
-
-            MouseMove, x, y, 2
-            randomSleepRange(50,100)
-            MouseClick, Left
-            jumpNum++
-        }else{ ; 1 jump left
-            Random, x, 771-30, 771+30
-            Random, y, 643-30, 643+30
-
-            MouseMove, x, y, 2
-            randomSleepRange(50,100)
-            MouseClick, Left
-            jumpNum := 1
-        }
-    
-    }
-
-    textGui("Mine lvl 2\nMoving from Crystals")
-    randomSleepRange(500,700)
-
-    ; Hop to allow the crystal check
-    Send, {Ctrl Up}
-    MouseMove, 1024, 579, 2
-    MouseClick, right
-    randomSleepRange(50,100)
-    MouseClick, Left
-    randomSleepRange(500,700)
-    MouseClick, Left
-    Send, {CTRL DOWN}
-
-    ;2nd level
-    Loop{
-        textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 2\nHopping to Ladder\nJump #" . jumpNum)
-        if (isDeadNow()){
-            resetIfDead()
-            return
-        }
-
+        ; Hop to allow the crystal check
+        Send, {Ctrl Up}
+        MouseMove, 1024, 579, 2
+        MouseClick, right
+        randomSleepRange(50,100)
+        MouseClick, Left
+        randomSleepRange(500,700)
+        MouseClick, Left
         Send, {CTRL DOWN}
 
-        if (A_TickCount > StartTime+180000){
-            Goto, endMineRun
-        }
-
-        ; Check to make sure we didn't go down a ladder by accient
-        PixelSearch, , , 842, 463, 844, 465, 0x5D6276, 0, Fast
-        if ErrorLevel{ ; IF not found
-        }else{
-            randomSleepRange(1000,1300)
-            break
-        }
-
-        ; look for ladder
-        PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
-        if ErrorLevel{ ; IF not found
-            
-        }else{
-            textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 2\nLadder Found")
-            randomSleepRange(1000,1300)
-            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
-            if ErrorLevel{
-                continue
+        ;2nd level
+        Loop{
+            textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 2\nHopping to Ladder\nJump #" . jumpNum)
+            if (isDeadNow()){
+                resetIfDead()
+                return
             }
-            Send, {Ctrl Up}
-            MouseMove, Px, Py, 2
-            randomSleep()
-            MouseClick, Left
+
             Send, {CTRL DOWN}
 
-            randomSleepRange(3000,4000)
-            break
-        }
+            if (A_TickCount > StartTime+180000){
+                Goto, endMineRun
+            }
 
-        if (jumpNum = 1){
-            Random, x, 1245-30, 1245+30
-            Random, y, 435-30, 435+30
+            ; Check to make sure we didn't go down a ladder by accient
+            PixelSearch, , , 842, 463, 844, 465, 0x5D6276, 0, Fast
+            if ErrorLevel{ ; IF not found
+            }else{
+                randomSleepRange(1000,1300)
+                break
+            }
 
-            ; Check if jump is useless due to wall
-            PixelSearch, , , x-1, y-1, x+1, y+1, 0x000000, 1, Fast
-            if ErrorLevel{
+            ; look for ladder
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{ ; IF not found
                 
             }else{
+                textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 2\nLadder Found")
+                randomSleepRange(1000,1300)
+                PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+                if ErrorLevel{
+                    continue
+                }
+                Send, {Ctrl Up}
+                MouseMove, Px, Py, 2
+                randomSleep()
+                MouseClick, Left
+                Send, {CTRL DOWN}
+
+                randomSleepRange(3000,4000)
+                break
+            }
+
+            if (jumpNum = 1){
+                Random, x, 1245-30, 1245+30
+                Random, y, 435-30, 435+30
+
+                ; Check if jump is useless due to wall
+                PixelSearch, , , x-1, y-1, x+1, y+1, 0x000000, 1, Fast
+                if ErrorLevel{
+                    
+                }else{
+                    jumpNum++
+                    continue
+                }
+
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
+                MouseClick, Left
+                Send, {Ctrl Up}
+                MouseClick, Left
+                Send, {CTRL DOWN}
                 jumpNum++
-                continue
-            }
+            }else if (jumpNum = 2){
+                Random, x, 1202-30, 1202+30
+                Random, y, 634-30, 634+30
 
-            MouseMove, x, y, 2
-            randomSleepRange(50,100)
-            MouseClick, Left
-            Send, {Ctrl Up}
-            MouseClick, Left
-            Send, {CTRL DOWN}
-            jumpNum++
-        }else if (jumpNum = 2){
-            Random, x, 1202-30, 1202+30
-            Random, y, 634-30, 634+30
-
-            MouseMove, x, y, 2
-            randomSleepRange(50,100)
-            MouseClick, Left
-            Send, {Ctrl Up}
-            MouseClick, Left
-            Send, {CTRL DOWN}
-            jumpNum++
-        }else{ ; 1 jump left
-            ; checkIfMinerTooLow()
-            ; if (checkIfMinerTooLow() = false){
-            Random, x, 948-30, 948+30
-            Random, y, 672-30, 672+30
-
-            MouseMove, x, y, 2
-            randomSleepRange(50,100)
-            MouseClick, Left
-            Send, {Ctrl Up}
-            MouseClick, Left
-            Send, {CTRL DOWN}
-                
-            ; }
-            jumpNum := 1
-        }
-
-        randomSleepRange(300,400)
-    }
-
-    textGui("Mine lvl 3\nMoving from Crystals")
-    ; Hop to allow the crystal check
-    Send, {Ctrl Up}
-    MouseMove, 1024, 579, 2
-    MouseClick, right
-    randomSleepRange(50,100)
-    MouseClick, Left
-    randomSleepRange(500,700)
-    MouseClick, Left
-    Send, {CTRL DOWN}
-
-    ;3nd level
-    Loop{
-        textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 3\nHopping to Ladder\nJump #" . jumpNum)
-        if (isDeadNow()){
-            resetIfDead()
-            return
-        }
-
-        Send, {CTRL DOWN}
-        if (A_TickCount > StartTime+180000){
-            Goto, endMineRun
-        }
-
-        ; Check to make sure we didn't go down a ladder by accient
-        PixelSearch, , , 842, 463, 844, 465, 0x5D6276, 0, Fast
-        if ErrorLevel{ ; IF not found
-        }else{
-            randomSleepRange(1000,1300)
-            break
-        }
-
-        ; look for ladder
-        PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
-        if ErrorLevel{ ; IF not found
-            
-        }else{
-            textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 3\nLadder Found")
-            randomSleepRange(1000,1300)
-            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
-            if ErrorLevel{
-                continue
-            }
-            Send, {Ctrl Up}
-            MouseMove, Px, Py, 2
-            randomSleep()
-            MouseClick, Left
-            Send, {CTRL DOWN}
-
-            randomSleepRange(3000,4000)
-            break
-        }
-        if (jumpNum = 1){
-            Random, x, 1245-30, 1245+30
-            Random, y, 435-30, 435+30
-
-            ; Check if jump is useless due to wall
-            PixelSearch, , , x-1, y-1, x+1, y+1, 0x000000, 1, Fast
-            if ErrorLevel{
-                
-            }else{
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
+                MouseClick, Left
+                Send, {Ctrl Up}
+                MouseClick, Left
+                Send, {CTRL DOWN}
                 jumpNum++
-                continue
-            }
-
-            MouseMove, x, y, 2
-            randomSleepRange(50,100)
-            MouseClick, Left
-            jumpNum++
-        }else if (jumpNum = 2){
-            Random, x, 1202-30, 1202+30
-            Random, y, 634-30, 634+30
-
-            MouseMove, x, y, 2
-            randomSleepRange(50,100)
-            MouseClick, Left
-            jumpNum++
-        }else{ ; 1 jump left
-            ; checkIfMinerTooLow()
-            ; if (checkIfMinerTooLow() = false){
+            }else{ ; 1 jump left
+                ; checkIfMinerTooLow()
+                ; if (checkIfMinerTooLow() = false){
                 Random, x, 948-30, 948+30
                 Random, y, 672-30, 672+30
 
                 MouseMove, x, y, 2
                 randomSleepRange(50,100)
                 MouseClick, Left
-                
-            ;}
-            jumpNum := 1
+                Send, {Ctrl Up}
+                MouseClick, Left
+                Send, {CTRL DOWN}
+                    
+                ; }
+                jumpNum := 1
+            }
+
+            randomSleepRange(300,400)
         }
 
-        randomSleepRange(300,400)
+        textGui("Mine lvl 3\nMoving from Crystals")
+        ; Hop to allow the crystal check
+        Send, {Ctrl Up}
+        MouseMove, 1024, 579, 2
+        MouseClick, right
+        randomSleepRange(50,100)
+        MouseClick, Left
+        randomSleepRange(500,700)
+        MouseClick, Left
+        Send, {CTRL DOWN}
+
+        ;3nd level
+        Loop{
+            textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 3\nHopping to Ladder\nJump #" . jumpNum)
+            if (isDeadNow()){
+                resetIfDead()
+                return
+            }
+
+            Send, {CTRL DOWN}
+            if (A_TickCount > StartTime+180000){
+                Goto, endMineRun
+            }
+
+            ; Check to make sure we didn't go down a ladder by accient
+            PixelSearch, , , 842, 463, 844, 465, 0x5D6276, 0, Fast
+            if ErrorLevel{ ; IF not found
+            }else{
+                randomSleepRange(1000,1300)
+                break
+            }
+
+            ; look for ladder
+            PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+            if ErrorLevel{ ; IF not found
+                
+            }else{
+                textGui("" . Ceil((StartTime+180000-A_TickCount)/1000) . " seconds Left\nMine lvl 3\nLadder Found")
+                randomSleepRange(1000,1300)
+                PixelSearch, Px, Py, 423, 90, 1417, 722, 0x587D91, 0, Fast
+                if ErrorLevel{
+                    continue
+                }
+                Send, {Ctrl Up}
+                MouseMove, Px, Py, 2
+                randomSleep()
+                MouseClick, Left
+                Send, {CTRL DOWN}
+
+                randomSleepRange(3000,4000)
+                break
+            }
+            if (jumpNum = 1){
+                Random, x, 1245-30, 1245+30
+                Random, y, 435-30, 435+30
+
+                ; Check if jump is useless due to wall
+                PixelSearch, , , x-1, y-1, x+1, y+1, 0x000000, 1, Fast
+                if ErrorLevel{
+                    
+                }else{
+                    jumpNum++
+                    continue
+                }
+
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
+                MouseClick, Left
+                jumpNum++
+            }else if (jumpNum = 2){
+                Random, x, 1202-30, 1202+30
+                Random, y, 634-30, 634+30
+
+                MouseMove, x, y, 2
+                randomSleepRange(50,100)
+                MouseClick, Left
+                jumpNum++
+            }else{ ; 1 jump left
+                ; checkIfMinerTooLow()
+                ; if (checkIfMinerTooLow() = false){
+                    Random, x, 948-30, 948+30
+                    Random, y, 672-30, 672+30
+
+                    MouseMove, x, y, 2
+                    randomSleepRange(50,100)
+                    MouseClick, Left
+                    
+                ;}
+                jumpNum := 1
+            }
+
+            randomSleepRange(300,400)
+        }
+
     }
+    
 
     endMineRun:
 
@@ -1377,7 +1696,7 @@ DCbankFromScroll(isFromDead:=false){
     ;; Hop to the Pharm
     textGui("Hopping to Pharm")
     SetKeyDelay 10,20
-    loop,10{
+    loop,30{
 
         if (isDeadNow()){
             resetIfDead()
@@ -1393,7 +1712,7 @@ DCbankFromScroll(isFromDead:=false){
             Mousemove, px-100,py,2
             randomSleep()
             MouseClick, Left
-            randomSleepRange(6000,7000)
+            randomSleepRange(2000,3000)
 
             textGui("Hopping to Pharm\nChecking Pharm is Open")
             ; Check to see if pharm is opened
@@ -1406,8 +1725,8 @@ DCbankFromScroll(isFromDead:=false){
         }
         textGui("Hopping to Pharm\nMoving to Pharm")
 
-        Random, x, 1150, 1200
-        Random, y, 350, 415
+        Random, x, 1130, 1220
+        Random, y, 320, 415
 
         Mousemove, x,y,2
         Send, {Ctrl Down}
@@ -1434,6 +1753,10 @@ DCbankFromScroll(isFromDead:=false){
         if (isDeadNow()){
             resetIfDead()
             return
+        }
+
+        if (A_Index > 60){
+            break
         }
 
         randomSleep()
@@ -1480,6 +1803,31 @@ DCbankFromScroll(isFromDead:=false){
         }
         randomSleepRange(300,500)
     }
+
+
+    ; Check if hp is low
+
+    ; if low, buy a pot
+    PixelSearch, , , 432-1, 759-1, 432+1, 759+1, 0x86795E, 0, Fast
+    if ErrorLevel{ ; IF not found
+    }else{
+        Mousemove, 618,195
+        randomSleep()
+        MouseClick, right
+        randomSleepRange(700,1000)
+
+        ; find then use the pot
+        PixelSearch, px, py, topX, topY, botX, botY, 0x37984D, 0, Fast
+        if ErrorLevel{ ; IF not found
+        }else{
+            Mousemove, px, py
+            randomSleep()
+            MouseClick, right
+            randomSleepRange(700,1000)
+        }
+    }
+
+
 
     ; Only buy a scroll if there are no other scrolls in inventory
     PixelSearch, , , topX, topY, botX, botY, 0x3CBEEF, 0, Fast
@@ -1645,19 +1993,18 @@ DCbankFromScroll(isFromDead:=false){
 }
 
 waitForMomentStop(){
-    randomSleepRange(100,200)
     loop{
         PixelGetColor, spot1start, 1012, 152
         PixelGetColor, spot2start, 931, 459
-        randomSleepRange(100,200)
+        randomSleepRange(50,100)
         PixelGetColor, spot1stop, 1012, 152
         PixelGetColor, spot2stop, 931, 459
 
         if (spot1start = spot1stop && spot2start = spot2stop){
             if (A_Index = 1){
                 ; no movement on first check, try to walk
-                randomSleep()
                 MouseClick, Left
+                randomSleep()
                 continue
             }
             ; no movement detected
@@ -1686,7 +2033,11 @@ useScroll(){
     ; find the scroll
     PixelSearch, px, py, topX, topY, botX, botY, 0x3CBEEF, 0, Fast
     if ErrorLevel{ ; IF not found
-        return "error"
+        ; Check to see if in DC already
+        PixelSearch, , , 608-1, 483-1, 608+1, 483+1, 0x60B28F, 1, Fast
+        if ErrorLevel{ ; IF not found
+            return "error"
+        }
     }else{
         MouseMove, px, py, 2
         randomSleep()
@@ -1696,6 +2047,415 @@ useScroll(){
     }
 }
 
+prepareTrading(){
+    ; Teleport to DC
+    ; Sell all the items
+    ; Grab everything from the bank
+    ; teleport to the market
+    ; Hop south west
+    ; wait for trade window
+    ; check who's trading
+    ; trade over items
+    ; teleport to dc
+    global topX
+    global topY
+    global botX
+    global botY
+    global account
+    account := 1
+    loop, 11{
+        switchAccount()
+        ; Teleport to DC
+        attemptSellingAgain:
+        if (useScroll() == "error"){
+            MsgBox, No scroll to teleport
+        }
+
+        ; Make sure inventory is closed
+        PixelSearch, , , 1255-1, 429-1, 1255+1, 429+1, 0x635131, 0, Fast
+        if ErrorLevel{ ; IF not found
+            
+        }else{
+            ; close Inventory
+            MouseMove, 970, 762, 2
+            randomSleep()
+            MouseClick, Left
+            randomSleep()
+            randomSleepRange(1000,2000)
+        }
+
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        ;; Hop to the Pharm
+        textGui("Hopping to Pharm")
+        SetKeyDelay 10,20
+        loop,30{
+
+            if (isDeadNow()){
+                resetIfDead()
+                return
+            }
+            textGui("Hopping to Pharm\nLooking for Pharm")
+            ; Find the pharm
+            PixelSearch, px, py, 405, 37, 1424, 724, 0x0000CE, 0, Fast
+            if ErrorLevel{ ; IF not found
+
+            }else{
+                textGui("Hopping to Pharm\nPharm Found")
+                Mousemove, px-100,py,2
+                randomSleep()
+                MouseClick, Left
+                randomSleepRange(6000,7000)
+
+                textGui("Hopping to Pharm\nChecking Pharm is Open")
+                ; Check to see if pharm is opened
+                PixelSearch, , , 613-5, 283-5, 613+5, 283+5, 0x5A4929, 1, Fast
+                if ErrorLevel{ ; IF not found
+                    continue
+                }else{
+                    break
+                }
+            }
+            textGui("Hopping to Pharm\nMoving to Pharm")
+
+            Random, x, 1150, 1200
+            Random, y, 350, 415
+
+            Mousemove, x,y,2
+            Send, {Ctrl Down}
+            MouseClick, Left
+            Send, {Ctrl Up}
+            MouseClick, Left
+            MouseClick, Left
+            waitForMomentStop()
+            
+
+        }
+
+        textGui("Double checking pharm is open")
+        ;;;;;;;;;;;;;;;
+        ; Check to see if pharm is opened
+        PixelSearch, , , 613-5, 283-5, 613+5, 283+5, 0x5A4929, 1, Fast
+        if ErrorLevel{ ; IF not found
+            textGui("unable to find pharm!", "FF0000")
+            randomSleepRange(10000,13000)
+            return
+        }
+        
+        ; sell loop
+        loop{
+            textGui("Selling Ore\nOre #" . A_Index)
+            if (isDeadNow()){
+                resetIfDead()
+                return
+            }
+
+            if (A_Index > 60){
+                break
+            }
+
+            randomSleep()
+            PixelSearch, Px, Py, topX, topY, botX, botY, 0x4F88B8, 1, Fast ; GOLD
+            if ErrorLevel{ ; IF not found
+                PixelSearch, Px, Py, topX, topY, botX, botY, 0x555455, 0, Fast ; IRON
+                if ErrorLevel{ ; IF not found
+                    PixelSearch, Px, Py, topX, topY, botX, botY, 0xB5D3E7, 0, Fast ; COPPER
+                    if ErrorLevel{ ; IF not found
+                        PixelSearch, Px, Py, topX, topY, botX, botY, 0xB5B2B5, 0, Fast ; SILVER
+                        if ErrorLevel{ ; IF not found
+                            break
+                        }else{ ; if found
+                            MouseMove, Px, Py
+                            randomSleep()
+                            MouseClick, Left
+                            MouseMove, 625, 284
+                            randomSleep()
+                            MouseClick, Left
+                        }
+                    }else{ ; if found
+                        MouseMove, Px, Py
+                        randomSleep()
+                        MouseClick, Left
+                        MouseMove, 625, 284
+                        randomSleep()
+                        MouseClick, Left
+                    }
+                }else{ ; if found
+                    MouseMove, Px, Py
+                    randomSleep()
+                    MouseClick, Left
+                    MouseMove, 625, 284
+                    randomSleep()
+                    MouseClick, Left
+                }
+            }else{ ; if found
+                MouseMove, Px, Py
+                randomSleep()
+                MouseClick, Left
+                MouseMove, 625, 284
+                randomSleep()
+                MouseClick, Left
+            }
+            randomSleepRange(300,500)
+        }
+
+
+        ; Check if hp is low
+        ; if low, buy a pot
+        PixelSearch, , , 432-1, 759-1, 432+1, 759+1, 0x86795E, 0, Fast
+        if ErrorLevel{ ; IF not found
+        }else{
+            Mousemove, 618,195
+            randomSleep()
+            MouseClick, right
+            randomSleepRange(700,1000)
+
+            ; find then use the pot
+            PixelSearch, px, py, topX, topY, botX, botY, 0x37984D, 0, Fast
+            if ErrorLevel{ ; IF not found
+            }else{
+                Mousemove, px, py
+                randomSleep()
+                MouseClick, right
+                randomSleepRange(700,1000)
+            }
+        }
+
+
+
+        ; Only buy a scroll if there are no other scrolls in inventory
+        PixelSearch, , , topX, topY, botX, botY, 0x3CBEEF, 0, Fast
+        if ErrorLevel{ ; IF not found
+            ; buy scroll
+            MouseMove, 442, 242, 2
+            randomSleep()
+            MouseClick, right
+            randomSleep()
+        }
+
+        textGui("Closing Pharm")
+        ; Close inventory/Store
+        MouseMove, 634, 331, 2
+        randomSleep()
+        MouseClick, left
+        randomSleepRange(1000,1200)
+
+        randomSleepRange(1000,2000)
+        findWHCount := 0
+        loop{
+            textGui("Looking for WH\nAttempts:" . findWHCount . "/15")
+            if (isDeadNow()){
+                resetIfDead()
+                return
+            }
+
+            ; if unable to find the WH guy, restart
+            if (findWHCount > 15){
+                if (useScroll() = "error"){
+                    return
+                }
+                Goto, attemptSellingAgain
+            }
+
+            ;check if any npc clicked by accident
+            PixelSearch, , , 1180-1, 54-1, 1180+1, 54+1, 0x84C7D6, 0, Fast
+            if ErrorLevel{ ; IF not found
+                ; nothing
+            }else{
+                Mousemove, 1160,51,2
+                randomSleep()
+                MouseClick, Left
+            }
+
+
+            ; Hop towards the WH
+            PixelSearch, Px, Py, 405, 37, 1424, 724, 0x392010, 0, Fast
+            if ErrorLevel{ ; IF not found
+
+            }else{
+                textGui("Opening WH")
+                Mousemove, px,py,2
+                randomSleep()
+                MouseClick, Left
+                randomSleepRange(7000,8000)
+
+                ;Check to see if WH is opened
+                PixelSearch, , , 1255-1, 429-1, 1255+1, 429+1, 0x635131, 0, Fast
+                if ErrorLevel{ ; IF not found
+                    continue
+                }else{
+                    break
+                }
+            }
+            textGui("Looking for WH\nAttempts:" . findWHCount . "/15\nMoving Closer")
+            Random, x, 483, 540
+            Random, y, 198, 250
+
+            Mousemove, x,y,2
+            Send, {Ctrl Down}
+            MouseClick, Left
+            Send, {Ctrl Up}
+            waitForMomentStop()
+
+            findWHCount++
+        }
+
+        randomSleepRange(1000,1200)
+        textGui("WH Open")
+        SetKeyDelay 300,500
+        
+        ; Withdraw bank
+        withdrawBank()
+
+
+        ; unBank Gem Loop
+        loop{
+            textGui("WH Open\nEmptying Gems")
+            if (checkIfDCMidAction()){
+                break
+            }
+            randomSleep()
+            PixelSearch, Px, Py, 422, 266, 634, 434, 0xFF7FEC, 1, Fast ; VIOLET GEM
+            if ErrorLevel{ ; IF not found
+                PixelSearch, Px, Py, 422, 266, 634, 434, 0xEF511B, 0, Fast ; MOON GEM
+                if ErrorLevel{ ; IF not found
+                    randomSleepRange(2000,3000)
+                    break
+                }else{ ; if found
+                    MouseMove, Px, Py
+                    randomSleep()
+                    MouseClick, Left
+                }
+            }else{ ; if found
+                MouseMove, Px, Py
+                randomSleep()
+                MouseClick, Left
+            }
+            randomSleepRange(300,500)
+        }
+
+
+        SetKeyDelay 10,20
+        randomSleepRange(1000,1200)
+
+        
+        textGui("Closing WH")
+        ; Close WH
+        Mousemove, 587,459,2
+        randomSleep()
+        MouseClick, left
+        randomSleepRange(1000,1200)
+
+        searchAttempts := 0
+        loop{
+            textGui("Looking for Conductress\nAttempt:" . searchAttempts . "/30")
+            if (isDeadNow()){
+                resetIfDead()
+                return
+            }
+
+            ;check if any npc clicked by accident
+            PixelSearch, , , 1180-1, 54-1, 1180+1, 54+1, 0x84C7D6, 0, Fast
+            if ErrorLevel{ ; IF not found
+                ; nothing
+            }else{
+                Mousemove, 1160,51,2
+                randomSleep()
+                MouseClick, Left
+            }
+
+            ; Talk to conductress
+            PixelSearch, Px, Py, 405, 37, 1424, 724, 0x6F8EFF, 1, Fast
+            if ErrorLevel{ ; IF not found
+                if (searchAttempts > 30){
+                    ; Hop towards the WH
+                    PixelSearch, Px, Py, 405, 37, 1424, 724, 0x392010, 0, Fast
+                    if ErrorLevel{ ; IF not found
+                        if (useScroll() = "error"){
+                            return
+                        }
+                        Goto, attemptSellingAgain
+                    }else{
+                        Mousemove, Px, Py+200,2
+                        randomSleep()
+                        MouseClick, Left
+                        randomSleepRange(1000,2000)
+                    }
+
+                    randomSleepRange(3000,5000)
+                }
+            }else{
+                Mousemove, Px, Py,2
+                randomSleep()
+                MouseClick, Left
+                randomSleepRange(1000,2000)
+
+                ; Check if open
+                PixelSearch, , , 709, 93, 711, 95, 0xE7BAE7, 0, Fast
+                if ErrorLevel{ ; IF not found
+                    
+                }else{
+                    break
+                }
+            }
+            searchAttempts++
+        }
+
+        ; Go to the market
+        MouseMove, 696, 167, 2
+        randomSleep()
+        MouseClick, Left
+        randomSleep()
+
+        randomSleepRange(5000,6000)
+
+        ; Move away from teleport spot
+        Random, x, 684-50, 684+50
+        Random, y, 530-50, 530+50
+
+        Send, {Ctrl down}
+        MouseMove, x, y, 2
+        randomSleep()
+        MouseClick, Left
+        randomSleep()
+        Send, {Ctrl up}
+
+        ; wait for trade loop
+        loop{
+             PixelSearch, , , 935-1,410-1, 935+1,410+1, 0x6E919A, 0, Fast
+            if ErrorLevel{ ; IF not found
+                
+            }else{
+                name := StrReplace(StrReplace(OCR([777, 336, 847-777, 355-336]),":","")," ","")
+                if (name = "Cookie" or name = "Cupcakes"){
+                    MouseMove, 925, 411, 2
+                    randomSleep()
+                    MouseClick, Left
+                    randomSleep()
+                    break
+                }
+            }
+        }
+        randomSleepRange(2000,4000)
+        tradeOverGoldAndGems()
+        randomSleepRange(2000,4000)
+        useScroll()
+
+
+        ; check who's trading
+        ; trade over items
+        ; teleport to dc
+        
+
+
+
+    }
+
+    loop, 11{
+        switchAccount()
+        randomSleepRange(1000,2000)
+        DCbankFromScroll()
+    }
+}
 
 ;070B0F Mine DUDE
 ;405, 39 CLIENT TOP LEFT
