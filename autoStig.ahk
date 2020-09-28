@@ -6,14 +6,14 @@ loop{
     
     Send, {f5}
     randomSleep()
-    loop, 5{
-        MouseClick, right
-        randomSleep()
-    }
+
+    MouseClick, right
+    randomSleep()
+
 
     Send, {f1}
     randomSleep()
-    randomSleepRange(8000,12000)
+    randomSleepRange(400,800)
 }
 
 esc::
@@ -25,7 +25,7 @@ space::
 return
 
 randomSleep(){
-    Random, x, 400, 1000
+    Random, x, 400, 600
     Sleep, x
 }
 

@@ -21,11 +21,13 @@ box(topX, topY, botX-topX, botY-topY, 1, "out")
 
 loop{
     
+    ; Use med
     Send, {f5}
     randomSleep()
+    
     loop, 5{
-        PixelSearch, pX, pY, topX, topY, botX, botY, 0x5040FE, 3,fast
-        if ErrorLevel{ ; IF not found
+        ;PixelSearch, pX, pY, topX, topY, botX, botY, 0x5040FE, 3,fast
+        ;if ErrorLevel{ ; IF not found
             PixelSearch, pX, pY, topX, topY, botX, botY, 0xDECB8D, 3,fast
             if ErrorLevel{ ; IF not found
                 continue
@@ -36,13 +38,13 @@ loop{
                 MouseMove, pX, pY, 2
                 MouseClick, right
             }
-        }else{
-            RemoveBox2()
-            createBox2("000000")
-            box2(pX-5, pY-5, 10, 10, 1, "out")
-            MouseMove, pX, pY, 2
-            MouseClick, right
-        }
+        ;}else{
+        ;    RemoveBox2()
+        ;    createBox2("000000")
+        ;    box2(pX-5, pY-5, 10, 10, 1, "out")
+        ;    MouseMove, pX, pY, 2
+        ;    MouseClick, right
+        ;}
         randomSleep()
     }
     RemoveBox2()
@@ -61,7 +63,7 @@ space::
 return
 
 randomSleep(){
-    Random, x, 400, 1000
+    Random, x, 400, 500
     Sleep, x
 }
 

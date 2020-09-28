@@ -20,6 +20,8 @@ shadowY := 416
 dcAttempts := 0
 rotationStartTime := 0
 
+sleepMultiplyer := 2
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Walk Area
 ;Get the top Left corner
@@ -65,7 +67,7 @@ attempts := 0
 account := 1
 isPause := false
 rotationStartTime := A_TickCount
-Random, rotationInterval, 115, 165
+Random, rotationInterval, 9, 10
 
 nextResetGui("" . Ceil((rotationStartTime+(1000*60*rotationInterval)-A_TickCount)/1000/60) . " minutes Left")
 textGui("Switching to first account")
@@ -86,7 +88,7 @@ Loop{
         rotationStartTime := A_TickCount
         isPause := true
         account := 1
-        loop, 11{
+        loop, 1{
 
             switchAccount()
             randomSleepRange(1000,2000)
@@ -122,8 +124,12 @@ Loop{
                 randomSleep()
                 MouseClick, Right
                 randomSleep()
-                switchAccount()
-                randomSleep()
+                ; switchAccount()
+                ; randomSleep()
+                ; attempts := 0
+                textGui("Sleeping for 30 seconds\nInstead of switching accounts")
+
+                randomSleepRange(30000,32000)
                 attempts := 0
             }else{ ; if found
                 MouseMove, Px, Py
@@ -196,7 +202,7 @@ b::
     global account
     isPause := true
     account := 1
-    loop, 11{
+    loop, 1{
         switchAccount()
         randomSleepRange(1000,2000)
         DCbankFromScroll()
@@ -217,7 +223,7 @@ m::
     global account
     isPause := true
     account := 1
-    loop, 11{
+    loop, 1{
         switchAccount()
         randomSleepRange(1000,2000)
          ; Teleport scroll
@@ -264,19 +270,21 @@ f5::
 return
 
 randomSleep(){
-    Random, x, 300, 500
+    global sleepMultiplyer
+    Random, x, 300*sleepMultiplyer, 500*sleepMultiplyer
     Sleep, x
 }
 
 randomSleepRange(min,max){
-    Random, x, min, max
+    global sleepMultiplyer
+    Random, x, min*sleepMultiplyer, max*sleepMultiplyer
     Sleep, x
 }
 
 switchAccount(){
     global account
 
-    accountX := [538,641,752,861,960,1065,1166,1274,1373,1479,1588]
+    accountX := [538,538,538,538,538,538,538,538,538,538,538]
 
     loop{
         textGui("Looking for DC window")
@@ -312,7 +320,7 @@ switchAccount(){
     textGui("Checking if Dead")
     ; If it's dead now, try to revive all the other ones!
     if (isDeadNow()){
-        loop, 11{
+        loop, 1{
             MouseMove, accountX[A_Index], 855, 2
             MouseClick, Left
             if (isDeadNow()){
@@ -2063,7 +2071,7 @@ prepareTrading(){
     global botY
     global account
     account := 1
-    loop, 11{
+    loop, 1{
         switchAccount()
         ; Teleport to DC
         attemptSellingAgain:
@@ -2450,7 +2458,7 @@ prepareTrading(){
 
     }
 
-    loop, 11{
+    loop, 1{
         switchAccount()
         randomSleepRange(1000,2000)
         DCbankFromScroll()
