@@ -6,6 +6,8 @@ Loop{
     Random, sleepTime, 50, 100
     MouseClick, Right
     Sleep, sleepTime
+    MouseClick, Left
+    Sleep, sleepTime
 }
 
 esc::exitapp
